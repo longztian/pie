@@ -1,0 +1,43 @@
+{
+  "name": "pie",
+  "version": "0.0.1",
+  "description": "pie restful api server",
+  "main": "index.js",
+  "scripts": {
+    "lint": "node_modules/.bin/eslint *.js",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/longztian/pie.git"
+  },
+  "keywords": [
+    "pie",
+    "restful",
+    "api"
+  ],
+  "author": "Longzhang Tian",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/longztian/pie/issues"
+  },
+  "homepage": "https://github.com/longztian/pie#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.0.2",
+    "supertest": "^2.0.0"
+  },
+  "dependencies": {
+    "babel-plugin-transform-async-to-generator": "^6.8.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.14.0",
+    "babel-register": "^6.14.0",
+    "debug": "^2.2.0",
+    "eslint": "^3.4.0",
+    "eslint-config-airbnb-base": "^5.0.3",
+    "eslint-plugin-import": "^1.14.0",
+    "koa": "2.0.0-alpha.6",
+    "koa-bodyparser": "^3.2.0",
+    "koa-logger": "^2.0.0",
+    "koa-router": "^7.0.1"
+  }
+}
