@@ -4,14 +4,17 @@ const debug = require('debug')('pie')
 const router = new Router()
 
 router.get('/user', (ctx, next) => {
+  debug('router /user')
   ctx.body = '/user'
-  next()
+  return next().then(() => {
+
+  })
 })
 
 router.get('/node', (ctx, next) => {
   debug('router /node')
   ctx.body = '/node'
-  next()
+  return next()
 })
 
 router.all('*', (ctx, next) => {
@@ -23,8 +26,7 @@ router.all('*', (ctx, next) => {
       error: 'Endpoint not found',
     },
   }
-  next()
-    // return ctx.body
+  return next()
 })
 
 module.exports = router

@@ -12,31 +12,16 @@ app.proxy = true
 app.use(logger())
 
 // x-response-time
-
-app.use((ctx, next) => {
+app.use(async (ctx, next) => {
+  debug('x-response-time begin')
   const start = new Date()
-  return next().then(() => {
-    const ms = new Date() - start
-    ctx.set('X-Response-Time', `${ms}ms`)
-  })
+  await next()
+  const ms = new Date() - start
+  ctx.set('X-Response-Time', `${ms}ms`)
+  debug('x-response-time end')
 })
 
 app.use(bodyParser())
-
-// logger
-app.use((ctx, next) => {
-  const start = new Date()
-  return next().then(() => {
-    const ms = new Date() - start
-    process.stdout.write(`${ctx.method} ${ctx.url} - ${ms}ms\n`)
-  })
-})
-
-// response
-app.use((ctx, next) => {
-  ctx.body = 'Hello World'
-  return next()
-})
 
 app.use(router.routes())
   .use(router.allowedMethods())
@@ -47,9 +32,6 @@ app.use(() => {
 
 app.listen(3000)
 
-/*
- * log errors to file
 app.on('error', err =>
-  //log.error('server error', err)
+  process.stderr.write(`server error ${err}\n`)
 )
-*/
