@@ -1,10 +1,10 @@
+const debug = require('debug')('pie')
 const Koa = require('koa')
 const bodyParser = require('koa-bodyparser')
 const logger = require('koa-logger')
-const debug = require('debug')('pie')
+const router = require('./router')
 const session = require('koa-generic-session')
 const redisStore = require('koa-redis')
-const router = require('./router')
 
 const app = new Koa()
 
@@ -13,14 +13,17 @@ app.proxy = true
 
 app.use(logger())
 
+const twoMonths = 60 * 24 * 3600000
+
 app.keys = ['Rose', 'Life']
 app.use(session({
   store: redisStore(),
   key: 'sid',
+  ttl: twoMonths,
   cookie: {
     httpOnly: false,
     signed: false,
-    maxAge: 60 * 24 * 3600000, // 2 months in ms
+    maxAge: twoMonths,
   },
 }))
 

@@ -1,5 +1,5 @@
-const Router = require('koa-router')
 const debug = require('debug')('pie')
+const Router = require('koa-router')
 
 const router = new Router()
 
