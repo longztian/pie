@@ -5,13 +5,19 @@ const router = new Router()
 
 router.get('/user/:id', (ctx) => {
   debug('router /user')
+  ctx.body = `last user id ${ctx.session.uid}, current user id ${ctx.params.id}`
   ctx.session.uid = ctx.params.id
-  ctx.body = `get user ${ctx.params.id}`
 })
 
 router.get('/node', (ctx) => {
   debug('router /node')
   ctx.body = '/node'
+})
+
+router.get('/count', ctx => {
+  ctx.session.count = ctx.session.count || 0
+  ctx.body = ctx.session.count++
+  console.log(ctx.body)
 })
 
 router.all('*', (ctx) => {

@@ -3,7 +3,7 @@ const Koa = require('koa')
 const bodyParser = require('koa-bodyparser')
 const logger = require('koa-logger')
 const router = require('./router')
-const session = require('koa-generic-session')
+const session = require('koa-session-minimal')
 const redisStore = require('koa-redis')
 
 const app = new Koa()
@@ -15,7 +15,7 @@ app.use(logger())
 
 const twoMonths = 60 * 24 * 3600000
 
-app.keys = ['Rose', 'Life']
+// app.keys = ['Rose', 'Life']
 app.use(session({
   store: redisStore(),
   key: 'sid',
