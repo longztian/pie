@@ -14,10 +14,9 @@ router.get('/node', (ctx) => {
   ctx.body = '/node'
 })
 
-router.get('/count', ctx => {
+router.get('/count', (ctx) => {
   ctx.session.count = ctx.session.count || 0
-  ctx.body = ctx.session.count++
-  console.log(ctx.body)
+  ctx.body = ctx.session.count += 1
 })
 
 router.all('*', (ctx) => {

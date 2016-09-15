@@ -28,7 +28,7 @@ app.use(session({
 }))
 
 // x-response-time
-app.use(async(ctx, next) => {
+app.use((async)(ctx, next) => {
   debug('x-response-time begin')
   const start = new Date()
   await next()
