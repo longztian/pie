@@ -13,29 +13,17 @@ app.proxy = true
 
 app.use(logger())
 
-const twoMonths = 60 * 24 * 3600000
+const ONE_MONTH = 30 * 24 * 3600000
 
 // app.keys = ['Rose', 'Life']
 app.use(session({
-  store: redisStore(),
   key: 'sid',
-  ttl: twoMonths,
+  store: redisStore(),
   cookie: {
+    maxAge: ONE_MONTH,
     httpOnly: false,
-    signed: false,
-    maxAge: twoMonths,
   },
 }))
-
-// x-response-time
-app.use((async)(ctx, next) => {
-  debug('x-response-time begin')
-  const start = new Date()
-  await next()
-  const ms = new Date() - start
-  ctx.set('X-Response-Time', `${ms}ms`)
-  debug('x-response-time end')
-})
 
 app.use(bodyParser())
 
