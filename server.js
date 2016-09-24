@@ -1,4 +1,3 @@
-const debug = require('debug')('pie')
 const Koa = require('koa')
 const bodyParser = require('koa-bodyparser')
 const logger = require('koa-logger')

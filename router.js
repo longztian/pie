@@ -1,13 +1,11 @@
 const debug = require('debug')('pie')
 const Router = require('koa-router')
+const user = require('./api/v1/user')
 
 const router = new Router()
 
-router.get('/user/:id', (ctx) => {
-  debug('router /user')
-  ctx.body = `last user id ${ctx.session.uid}, current user id ${ctx.params.id}`
-  ctx.session.uid = ctx.params.id
-})
+
+router.use('/api/v1', user.routes(), user.allowedMethods())
 
 router.get('/node', (ctx) => {
   debug('router /node')
