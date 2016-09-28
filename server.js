@@ -1,9 +1,10 @@
 const Koa = require('koa')
-const bodyParser = require('koa-bodyparser')
 const logger = require('koa-logger')
-const router = require('./router')
 const session = require('koa-session-minimal')
 const redisStore = require('koa-redis')
+const convert = require('koa-convert')
+const graphqlHTTP = require('koa-graphql')
+const graphql = require('graphql')
 
 const app = new Koa()
 
@@ -24,10 +25,19 @@ app.use(session({
   },
 }))
 
-app.use(bodyParser())
+const MyGraphQLSchema = graphql.buildSchema(`
+  type Query {
+    hello: String
+  }
+`)
 
-app.use(router.routes())
-  .use(router.allowedMethods())
+const root = { hello: () => 'Hello world!' }
+
+app.use(convert(graphqlHTTP({
+  schema: MyGraphQLSchema,
+  rootValue: root,
+  graphiql: true,
+})))
 
 app.on('error', err =>
   process.stderr.write(`server error ${err}\n`)
