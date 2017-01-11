@@ -1,5 +1,5 @@
 require('babel-register')({
-  plugins: ['transform-async-to-generator'],
+  plugins: ['transform-es2015-modules-commonjs'],
 })
 
 require('./server.js')

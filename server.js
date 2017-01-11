@@ -1,10 +1,9 @@
-const Koa = require('koa')
-const logger = require('koa-logger')
-const session = require('koa-session-minimal')
-const redisStore = require('koa-redis')
-const convert = require('koa-convert')
-const graphqlHTTP = require('koa-graphql')
-const graphql = require('graphql')
+import Koa from 'koa'
+import logger from 'koa-logger'
+import session from 'koa-session-minimal'
+import redisStore from 'koa-redis'
+import convert from 'koa-convert'
+import graphql from './schema'
 
 const app = new Koa()
 
@@ -25,19 +24,7 @@ app.use(session({
   },
 }))
 
-const MyGraphQLSchema = graphql.buildSchema(`
-  type Query {
-    hello: String
-  }
-`)
-
-const root = { hello: () => 'Hello world!' }
-
-app.use(convert(graphqlHTTP({
-  schema: MyGraphQLSchema,
-  rootValue: root,
-  graphiql: true,
-})))
+app.use(graphql)
 
 app.on('error', err =>
   process.stderr.write(`server error ${err}\n`)
