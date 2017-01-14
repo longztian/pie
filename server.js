@@ -2,8 +2,7 @@ import Koa from 'koa'
 import logger from 'koa-logger'
 import session from 'koa-session-minimal'
 import redisStore from 'koa-redis'
-import convert from 'koa-convert'
-import graphql from './schema'
+import graphql from './graphql'
 
 const app = new Koa()
 
@@ -27,7 +26,7 @@ app.use(session({
 app.use(graphql)
 
 app.on('error', err =>
-  process.stderr.write(`server error ${err}\n`)
+  process.stderr.write(`server error ${err}\n`),
 )
 
 app.listen(3000)
