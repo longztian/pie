@@ -2,18 +2,22 @@ import Koa from 'koa'
 import logger from 'koa-logger'
 import session from 'koa-session-minimal'
 import redisStore from 'koa-redis'
-import graphql from './graphql'
+import Router from 'koa-router'
+import bodyParser from 'koa-bodyparser'
+import { graphqlKoa, graphiqlKoa } from 'graphql-server-koa'
+import schema from './schema'
+
+const ONE_MONTH = 30 * 24 * 3600000
+const PORT = 3000
 
 const app = new Koa()
+const router = new Router()
 
 // ALLOW PROXY REQUESTS
 app.proxy = true
 
 app.use(logger())
 
-const ONE_MONTH = 30 * 24 * 3600000
-
-// app.keys = ['Rose', 'Life']
 app.use(session({
   key: 'sid',
   store: redisStore(),
@@ -23,10 +27,19 @@ app.use(session({
   },
 }))
 
-app.use(graphql)
+app.use(bodyParser())
+
+router.post('/graphql', graphqlKoa(ctx => ({
+  schema,
+  context: ctx,
+})))
+router.get('/graphiql', graphiqlKoa({ endpointURL: '/graphql' }))
+
+app.use(router.routes())
+app.use(router.allowedMethods())
 
 app.on('error', err =>
   process.stderr.write(`server error ${err}\n`),
 )
 
-app.listen(3000)
+app.listen(PORT)

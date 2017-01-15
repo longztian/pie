@@ -1,6 +1,9 @@
-export default `
+import { makeExecutableSchema } from 'graphql-tools'
+import resolver from './schema-resolver'
+
+const schema = `
 type User {
-  id: Int! # the ! means that every author object _must_ have an id
+  id: Int!
   username: String
   avatar: String
   wechat: String
@@ -8,7 +11,12 @@ type User {
   lastName: String
   lastAccessTime: Int
   lastAccessCity: String
-  posts: [ForumTopic] # the list of ForumTopics by this author
+  posts: [ForumTopic]
+}
+
+input UserInput {
+  username: String
+  password: String
 }
 
 type Image {
@@ -23,6 +31,7 @@ type ForumTopic {
   title: String
   author: User
   body: String
+  time: Int
   attachments: [Image]
 }
 
@@ -34,26 +43,36 @@ type YellowPage {
   attachments: [Image]
 }
 
-# the schema allows the following query:
 type Query {
-  latestForumTopics: [ForumTopic]
+  latestForumTopics(limit: Int = 10): [ForumTopic]
   latestYellowPages: [YellowPage]
   latestForumTopicReplies: [ForumTopic]
   latestYellowPageReplies: [YellowPage]
-
-  posts: [ForumTopic]
 }
 
-# this schema allows the following mutation:
+type Authentication {
+  uid: Int
+  username: String
+  role: [String]
+}
+
 type Mutation {
+  login(username: String, password: String): Authentication
+  logout: Authentication
   updateForumTopic(postId: Int!): ForumTopic
   deleteUser(userId: Int!): User
 }
 
-# we need to tell the server which types represent the root query
-# and root mutation types. We call them RootQuery and RootMutation by convention.
 schema {
   query: Query
   mutation: Mutation
 }
 `
+
+const jsSchema = makeExecutableSchema({
+  typeDefs: schema,
+  resolvers: resolver,
+  logger: console,
+})
+
+export default jsSchema

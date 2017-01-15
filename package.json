@@ -36,11 +36,14 @@
     "babel-register": "^6.14.0",
     "debug": "^2.2.0",
     "graphql": "^0.8.2",
+    "graphql-server-koa": "^0.5.0",
+    "graphql-tools": "^0.9.0",
     "koa": "^2.0.0-alpha.7",
-    "koa-convert": "^1.2.0",
-    "koa-graphql": "^0.6.0",
+    "koa-bodyparser": "^3.2.0",
     "koa-logger": "^2.0.0",
     "koa-redis": "^2.1.2",
-    "koa-session-minimal": "^3.0.0"
+    "koa-router": "^7.0.1",
+    "koa-session-minimal": "^3.0.0",
+    "mysql": "^2.12.0"
   }
 }
