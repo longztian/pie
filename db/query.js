@@ -7,6 +7,7 @@ const conn = createConnection({
 })
 
 export default (sql, values) => new Promise((resolve, reject) => {
+  console.log(sql, values)
   conn.query({ sql, values }, (error, results, fields) => {
     if (error) reject(error)
     else resolve(results)

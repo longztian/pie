@@ -1,28 +1,29 @@
 import auth from './authentication'
 import topic from './topic'
+import user from './user'
 
-const getPosts = uid => [{
-  id: 1,
-  authorId: uid,
-}]
-
-const getUser = uid => ({
-  id: uid,
-  username: 'ikki',
-})
+const twoWeeksAgo = () => Math.floor(Date.now() / 86400000 - 7 * 2) * 86400
 
 export default {
   User: {
-    posts: obj => getPosts(obj.id),
+    lastAccessCity: () => 'Houston, TX',
+    recentCreatedTopics: (obj, { limit }) => topic.getUserRecentCreatedTopics(obj.id, limit),
+    recentRepliedTopics: (obj, { limit }) => topic.getUserRecentRepliedTopics(obj.id, limit),
   },
 
   Query: {
-    latestForumTopics: (obj, { limit }) => topic.getLatestForumTopics(limit),
-    latestYellowPages: (obj, { limit }) => topic.getLatestYellowPages(limit),
+    recentCreatedForumTopics: (obj, { limit }) => topic.getRecentCreatedForumTopics(limit),
+    recentCreatedYellowPages: (obj, { limit }) => topic.getRecentCreatedYellowPages(limit),
+    recentCreatedActivities: (obj, { limit }) => topic.getRecentCreatedActivities(limit),
+    recentRepliedForumTopics: (obj, { limit }) => topic.getRecentRepliedForumTopics(limit),
+    recentRepliedYellowPages: (obj, { limit }) => topic.getRecentRepliedYellowPages(limit),
+    recentHotForumTopics: (obj, { limit }) => topic.getRecentHotForumTopics(twoWeeksAgo(), limit),
+
+    user: (obj, { id }, ctx) => auth.isAuthenticated(ctx) && user.get(id),
   },
 
   Mutation: {
-    login: (obj, { username, password }, ctx) => auth.login(ctx, username, password),
+    login: (obj, { email, password }, ctx) => auth.login(ctx, email, password),
     logout: (obj, args, ctx) => auth.logout(ctx),
   },
 }

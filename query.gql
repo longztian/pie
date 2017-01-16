@@ -1,0 +1,86 @@
+mutation logout {
+  logout {
+    uid
+    name
+    role
+  }
+}
+
+mutation login {
+  login(email: "mikalotus3355@gmail.com", password: "6630") {
+    uid
+    name
+    role
+  }
+}
+
+query latestTopic {
+  recentCreatedForumTopics {
+    id
+    title
+    info
+  }
+}
+
+query latestYP {
+  recentCreatedYellowPages {
+    id
+    title
+    info
+  }
+}
+
+query latestActivities {
+  recentCreatedActivities {
+    id
+    title
+    info
+  }
+}
+
+query latestForumReply {
+  recentRepliedForumTopics {
+    id
+    title
+    info
+  }
+}
+
+query latestYPReply {
+  recentRepliedYellowPages {
+    id
+    title
+    info
+  }
+}
+
+query hotForumTopics {
+  recentHotForumTopics {
+    id
+    title
+  }
+}
+
+query user {
+  user(id: 14882) {
+    id
+    name
+    avatar
+    wechat
+    website
+    info
+    createTime: lastAccessTime
+    lastAccessCity
+    points
+    recentCreatedTopics {
+      id
+      title
+      info
+    }
+    recentRepliedTopics {
+      id
+      title
+      info
+    }
+  }
+}
