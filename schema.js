@@ -13,6 +13,7 @@ type User {
   id: Int!
   name: String
   avatar: String
+  sex: Int
   wechat: String
   website: String
   info: String
@@ -41,9 +42,22 @@ type Authentication {
   role: [String]
 }
 
+input UserInput {
+  name: String
+  email: String
+  password: String
+  avatar: String
+  sex: Int
+  wechat: String
+  website: String
+  info: String
+}
+
 type Mutation {
   login(email: String, password: String): Authentication
   logout: Authentication
+
+  editUser(id: Int, data: UserInput): User
 }
 
 schema {

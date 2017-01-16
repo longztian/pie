@@ -1,2 +1,2 @@
 # pie
-pie restful api server
+pie graphql api server

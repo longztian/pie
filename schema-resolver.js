@@ -25,5 +25,7 @@ export default {
   Mutation: {
     login: (obj, { email, password }, ctx) => auth.login(ctx, email, password),
     logout: (obj, args, ctx) => auth.logout(ctx),
+
+    editUser: (obj, { id, data }, ctx) => auth.isSelf(ctx, id) ? user.update(id, data).then(user.get) : null,
   },
 }

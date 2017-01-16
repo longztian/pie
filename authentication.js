@@ -11,7 +11,9 @@ class Authentication {
 
 const hashPassword = password => md5(`Alex${password}Tian`)
 
-const isAuthenticated = ctx => ctx.session.auth && ctx.session.auth.uid != 0
+const isAuthenticated = ctx => ctx.session.auth && ctx.session.auth.uid !== 0
+
+const isSelf = (ctx, uid) => ctx.session.auth && ctx.session.auth.uid === uid
 
 const login = (ctx, email, password) => {
   if (isAuthenticated(ctx)) throw `you have already logged in as ${ctx.session.auth.name}`
@@ -41,5 +43,6 @@ export default {
   login,
   logout,
   isAuthenticated,
+  isSelf,
 }
 

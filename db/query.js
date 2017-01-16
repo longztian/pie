@@ -1,10 +1,7 @@
 import { createConnection } from 'mysql'
+import config from '../config/db'
 
-const conn = createConnection({
-  user: 'web',
-  password: 'Ab663067',
-  database: 'hbbs',
-})
+const conn = createConnection(config)
 
 export default (sql, values) => new Promise((resolve, reject) => {
   console.log(sql, values)
