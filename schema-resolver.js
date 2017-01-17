@@ -19,7 +19,7 @@ export default {
     recentRepliedYellowPages: (obj, { limit }) => topic.getRecentRepliedYellowPages(limit),
     recentHotForumTopics: (obj, { limit }) => topic.getRecentHotForumTopics(twoWeeksAgo(), limit),
 
-    user: (obj, { id }, ctx) => auth.isAuthenticated(ctx) && user.get(id),
+    user: (obj, { id }, ctx) => auth.isAuthenticated(ctx) ? user.get(id) : null,
   },
 
   Mutation: {

@@ -84,3 +84,10 @@ query user {
     }
   }
 }
+
+mutation editUser {
+  editUser(id: 1, data: {wechat: "test1"}) {
+    id,
+    wechat
+  }
+}
