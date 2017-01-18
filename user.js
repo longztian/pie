@@ -18,24 +18,49 @@ const columns = {
 }
 
 const get = (id, fields) => {
-  const selections = fields.filter(field => columns[field])
-  .map(field => (field === columns[field] ? field : `${columns[field]} AS ${field}`))
-  .join(', ')
+  const dbFields = fields.filter(field => columns[field])
+  if (dbFields.length === 0 || (dbFields.length === 1 && dbFields[0] === 'id')) {
+    return { id }
+  }
+
+  const selections = dbFields
+    .map(field => (field === columns[field] ? field : `${columns[field]} AS ${field}`))
+    .join(', ')
 
   return query(`SELECT ${selections} FROM users WHERE id = ?`, [id])
   .then(result => (result.length > 0 ? result[0] : null))
 }
 
+const getSqlKeyValues = (data) => {
+  const fields = Object.keys(data)
+  if (fields.length === 0) return Promise.reject('Error: no data to update')
+
+  const dbFields = fields.filter(field => columns[field])
+  if (fields.length !== dbFields.length) return Promise.reject('Internal Error: unknown DB field')
+
+  return Promise.resolve({
+    keys: dbFields.map(field => `${field}=?`).join(', '),
+    values: Object.values(data),
+  })
+}
+
+const create = data => getSqlKeyValues(data)
+  .then(({ keys, values }) => query(`INSERT users SET ${keys}`, values))
+  .then(result => result.insert_id())
+
 const update = (id, data) => {
   if (data.password) data.password = hash(data.password)
 
-  const keys = Object.keys(data).map(key => `${columns[key]}=?`).join(', ')
-  const values = Object.values(data)
-
-  return query(`UPDATE users SET ${keys} WHERE id = ${id}`, values).then(() => id)
+  return getSqlKeyValues(data)
+    .then(({ keys, values }) => query(`UPDATE users SET ${keys} WHERE id = ${id}`, values))
+    .then(() => id)
 }
+
+const deleteUser = id => query('DELETE FROM users WHERE id = ?', [id]).then(() => id)
 
 export default {
   get,
+  create,
   update,
+  delete: deleteUser,
 }

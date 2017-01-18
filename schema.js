@@ -69,7 +69,9 @@ type Mutation {
   login(email: String, password: String): Authentication
   logout: Authentication
 
-  editUser(id: Int, data: UserInput): User
+  createUser(data: UserInput): User
+  updateUser(id: Int, data: UserInput): User
+  deleteUser(id: Int): User
 }
 
 schema {
