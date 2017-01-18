@@ -1,5 +1,5 @@
 import query from './db/query'
-import md5 from './lib/strings/md5'
+import { hash } from './password'
 
 class Authentication {
   constructor(uid, name, role) {
@@ -8,8 +8,6 @@ class Authentication {
     this.role = role
   }
 }
-
-const hashPassword = password => md5(`Alex${password}Tian`)
 
 const isAuthenticated = ctx => ctx.session.auth && ctx.session.auth.uid !== 0
 
@@ -23,7 +21,7 @@ const login = (ctx, email, password) => {
     if (result.length === 0) throw `Account does not exist: ${email}`
 
     const user = result[0]
-    if (user.password !== hashPassword(password)) throw 'Wrong password'
+    if (user.password !== hash(password)) throw 'Wrong password'
 
     ctx.sessionHandler.regenerateId()
     ctx.session.auth = new Authentication(user.id, user.username, [])

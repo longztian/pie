@@ -13,7 +13,7 @@ type User {
   id: Int!
   name: String
   avatar: String
-  sex: Int
+  gender: Int
   wechat: String
   website: String
   info: String
@@ -23,6 +23,18 @@ type User {
   points: Int
   recentCreatedTopics(limit: Int = 10): [TopicInfo]
   recentRepliedTopics(limit: Int = 10): [TopicInfo]
+}
+
+type Message {
+  id: Int!
+  body: String
+}
+
+type Topic {
+  id: Int!
+  title: String
+  msgCount: Int
+  messages: [Message]
 }
 
 type Query {
@@ -47,7 +59,7 @@ input UserInput {
   email: String
   password: String
   avatar: String
-  sex: Int
+  gender: Int
   wechat: String
   website: String
   info: String

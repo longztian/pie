@@ -4,6 +4,9 @@ import user from './user'
 
 const twoWeeksAgo = () => Math.floor(Date.now() / 86400000 - 7 * 2) * 86400
 
+const fields = info => info.fieldNodes[0].selectionSet.selections
+  .map(selection => selection.name.value)
+
 export default {
   User: {
     lastAccessCity: () => 'Houston, TX',
@@ -19,13 +22,16 @@ export default {
     recentRepliedYellowPages: (obj, { limit }) => topic.getRecentRepliedYellowPages(limit),
     recentHotForumTopics: (obj, { limit }) => topic.getRecentHotForumTopics(twoWeeksAgo(), limit),
 
-    user: (obj, { id }, ctx) => auth.isAuthenticated(ctx) ? user.get(id) : null,
+    user: (obj, { id }, ctx, info) => (auth.isAuthenticated(ctx) ? user.get(id, fields(info))
+                                                                 : null),
   },
 
   Mutation: {
     login: (obj, { email, password }, ctx) => auth.login(ctx, email, password),
     logout: (obj, args, ctx) => auth.logout(ctx),
 
-    editUser: (obj, { id, data }, ctx) => auth.isSelf(ctx, id) ? user.update(id, data).then(user.get) : null,
+    editUser: (obj, { id, data }, ctx, info) => (
+      auth.isSelf(ctx, id) ? user.update(id, data).then(uid => user.get(uid, fields(info)))
+                           : null),
   },
 }
