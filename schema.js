@@ -28,6 +28,8 @@ type User {
 type Message {
   id: Int!
   body: String
+  author: User
+  createTime: Int
 }
 
 type Topic {
@@ -35,6 +37,11 @@ type Topic {
   title: String
   msgCount: Int
   messages: [Message]
+}
+
+enum Mailbox {
+  INBOX
+  SENT
 }
 
 type Query {
@@ -46,6 +53,10 @@ type Query {
   recentHotForumTopics(limit: Int = 10): [TopicInfo]
 
   user(id: Int): User
+
+  getNewMessageCount(uid: Int): Int
+  getMessageTopics(userId: Int, mailbox: Mailbox, limit: Int = 10, offset: Int = 0): [Topic]
+  getMessages(topicId: Int, userId: Int): [Message]
 }
 
 type Authentication {
@@ -71,7 +82,7 @@ type Mutation {
 
   createUser(data: UserInput): User
   updateUser(id: Int, data: UserInput): User
-  deleteUser(id: Int): User
+  deleteUser(id: Int): Boolean
 }
 
 schema {

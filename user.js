@@ -39,20 +39,31 @@ const getSqlKeyValues = (data) => {
   if (fields.length !== dbFields.length) return Promise.reject('Internal Error: unknown DB field')
 
   return Promise.resolve({
-    keys: dbFields.map(field => `${field}=?`).join(', '),
+    keys: dbFields.map(field => columns[field]),
     values: Object.values(data),
   })
 }
 
-const create = data => getSqlKeyValues(data)
-  .then(({ keys, values }) => query(`INSERT users SET ${keys}`, values))
-  .then(result => result.insert_id())
+const create = (data) => {
+  if (data.password) data.password = hash(data.password)
+
+  return getSqlKeyValues(data)
+    .then(({ keys, values }) => {
+      const cols = keys.join(',')
+      const vals = keys.map(() => '?').join(',')
+      return query(`INSERT INTO users (${cols}) VALUES (${vals})`, values)
+    })
+    .then(result => result.insertId)
+}
 
 const update = (id, data) => {
   if (data.password) data.password = hash(data.password)
 
   return getSqlKeyValues(data)
-    .then(({ keys, values }) => query(`UPDATE users SET ${keys} WHERE id = ${id}`, values))
+    .then(({ keys, values }) => {
+      const cols = keys.map(field => `${field}=?`).join(', ')
+      return query(`UPDATE users SET ${cols} WHERE id = ${id}`, values)
+    })
     .then(() => id)
 }
 

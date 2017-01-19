@@ -37,7 +37,7 @@ export default {
       ? user.update(id, data).then(uid => user.get(uid, fields(info)))
       : null),
     deleteUser: (obj, { id }, ctx, info) => (auth.isAdmin(ctx) && !auth.isSelf(ctx, id)
-      ? user.delete(id).then(uid => user.get(uid, fields(info)))
-      : null),
+      ? user.delete(id).then(() => true)
+      : false),
   },
 }

@@ -13,9 +13,9 @@ const isAuthenticated = ctx => ctx.session.auth && ctx.session.auth.uid !== 0
 
 const isSelf = (ctx, uid) => ctx.session.auth && ctx.session.auth.uid === uid
 
-const isAdmin = (ctx) => ctx.session.auth && ctx.session.auth.uid === 1
+const isAdmin = ctx => ctx.session.auth && ctx.session.auth.uid === 1
 
-const isTempIdentified = (ctx) => {}
+const isTempIdentified = ctx => true
 
 const login = (ctx, email, password) => {
   if (isAuthenticated(ctx)) throw `you have already logged in as ${ctx.session.auth.name}`
