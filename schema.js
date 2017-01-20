@@ -32,10 +32,12 @@ type Message {
   createTime: Int
 }
 
-type Topic {
+type PMTopic {
   id: Int!
   title: String
-  msgCount: Int
+  changeTime: Int
+  hasNewMessage: Boolean
+  attendee: User
   messages: [Message]
 }
 
@@ -54,9 +56,9 @@ type Query {
 
   user(id: Int): User
 
-  getNewMessageCount(uid: Int): Int
-  getMessageTopics(userId: Int, mailbox: Mailbox, limit: Int = 10, offset: Int = 0): [Topic]
-  getMessages(topicId: Int, userId: Int): [Message]
+  pmCountNew: Int
+  pmTopics(mailbox: Mailbox = INBOX, limit: Int = 10, offset: Int = 0): [PMTopic]
+  pmTopic(id: Int): PMTopic
 }
 
 type Authentication {
@@ -83,6 +85,9 @@ type Mutation {
   createUser(data: UserInput): User
   updateUser(id: Int, data: UserInput): User
   deleteUser(id: Int): Boolean
+
+  createPM(topicId: Int = 0, toUserId: Int, body: String): PMTopic
+  deletePM(id: Int): PMTopic
 }
 
 schema {

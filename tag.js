@@ -14,11 +14,9 @@ const getLeafTagId = result => result[0]
 
 const queryForumTags = query('CALL get_tag_tree(1)')
   .then(getLeafTagId)
-  .catch(console.log)
 
 const queryYellowPageTags = query('CALL get_tag_tree(2)')
   .then(getLeafTagId)
-  .catch(console.log)
 
 export default {
   getForumTags: () => queryForumTags,

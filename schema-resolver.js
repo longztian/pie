@@ -24,6 +24,26 @@ export default {
 
     user: (obj, { id }, ctx, info) => (auth.isAuthenticated(ctx) ? user.get(id, fields(info))
                                                                  : null),
+    pmCountNew: (obj, args, ctx) => {
+      if (auth.isAuthenticated(ctx)) {
+        return topic.countNewPMTopics(auth.getUserId(ctx))
+      }
+      return null
+    },
+
+    pmTopics: (obj, { mailbox, limit, offset }, ctx) => {
+      if (auth.isAuthenticated(ctx)) {
+        return topic.getPMTopics(auth.getUserId(ctx), mailbox, limit, offset)
+      }
+      return null
+    },
+
+    pmTopic: (obj, { id }, ctx) => {
+      if (auth.isAuthenticated(ctx)) {
+        return topic.getPMTopic(auth.getUserId(ctx), id)
+      }
+      return null
+    },
   },
 
   Mutation: {
@@ -36,7 +56,7 @@ export default {
     updateUser: (obj, { id, data }, ctx, info) => (auth.isSelf(ctx, id)
       ? user.update(id, data).then(uid => user.get(uid, fields(info)))
       : null),
-    deleteUser: (obj, { id }, ctx, info) => (auth.isAdmin(ctx) && !auth.isSelf(ctx, id)
+    deleteUser: (obj, { id }, ctx) => (auth.isAdmin(ctx) && !auth.isSelf(ctx, id)
       ? user.delete(id).then(() => true)
       : false),
   },

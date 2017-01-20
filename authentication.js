@@ -17,6 +17,8 @@ const isAdmin = ctx => ctx.session.auth && ctx.session.auth.uid === 1
 
 const isTempIdentified = ctx => true
 
+const getUserId = ctx => ctx.session.auth.uid
+
 const login = (ctx, email, password) => {
   if (isAuthenticated(ctx)) throw `you have already logged in as ${ctx.session.auth.name}`
 
@@ -31,7 +33,6 @@ const login = (ctx, email, password) => {
     ctx.session.auth = new Authentication(user.id, user.username, [])
     return ctx.session.auth
   })
-  .catch(console.log)
 }
 
 const logout = (ctx) => {
@@ -48,5 +49,6 @@ export default {
   isSelf,
   isAdmin,
   isTempIdentified,
+  getUserId,
 }
 

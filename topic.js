@@ -84,9 +84,54 @@ const getUserRecentRepliedTopics = (uid, limit) => tag.getForumTags()
     info: topic.create_time,
   })))
 
-const getPrivateMessageTopics = (ctx, limit, offset) => {
+const toTopic = result => ({
+  id: result.msg_id,
+  title: result.body.length > 22 ? `${result.body.slice(0, 20)}...` : result.body,
+  hasNewMessage: result.is_new === 1,
+  changeTime: result.time,
+  attendee: {
+    id: result.uid,
+    name: result.user,
+  },
+})
 
+const toMessage = data => ({
+  id: data.id,
+  createTime: data.time,
+  body: data.body,
+  author: {
+    id: data.uid,
+    name: data.username,
+    avatar: data.avatar,
+  },
+})
+
+const getPMTopics = (uid, mailbox, limit, offset) => {
+  const func = mailbox !== 'SENT' ? 'get_pm_list_inbox_2' : 'get_pm_list_sent_2'
+  return query(`CALL ${func}(?, ?, ?)`, [uid, limit, offset])
+    .then(results => results[0].map(toTopic))
 }
+
+const getPMTopic = (uid, tid) => {
+  const topic = {
+    id: tid,
+  }
+
+  return query('CALL get_pm(?, ?)', [tid, uid])
+    .then((results) => {
+      topic.messages = results[0].map(toMessage)
+      return query('CALL get_pm_replyto(?, ?)', [tid, uid])
+    }).then((results) => {
+      topic.attendee = {
+        id: results[0][0].id,
+        name: results[0][0].username,
+      }
+      return topic
+    })
+}
+
+const countNewPMTopics = uid => query('CALL get_pm_count_new(?)', [uid])
+  .then(results => Object.values(results[0][0])[0])
 
 export default {
   getRecentCreatedForumTopics,
@@ -98,4 +143,8 @@ export default {
 
   getUserRecentCreatedTopics,
   getUserRecentRepliedTopics,
+
+  getPMTopics,
+  getPMTopic,
+  countNewPMTopics,
 }
