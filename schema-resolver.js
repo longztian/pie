@@ -59,5 +59,12 @@ export default {
     deleteUser: (obj, { id }, ctx) => (auth.isAdmin(ctx) && !auth.isSelf(ctx, id)
       ? user.delete(id).then(() => true)
       : false),
+
+    createPM: (obj, { topicId, toUserId, body }, ctx) => (auth.isAuthenticated(ctx) && !auth.isSelf(ctx, toUserId)
+      ? message.create(topicId, auth.getUserId(ctx), toUserId, body)
+      : null),
+    deletePM: (obj, { id }, ctx) => (auth.isAuthenticated(ctx)
+      ? message.delete(id)
+      : false),
   },
 }

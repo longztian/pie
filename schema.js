@@ -86,8 +86,8 @@ type Mutation {
   updateUser(id: Int, data: UserInput): User
   deleteUser(id: Int): Boolean
 
-  createPM(topicId: Int = 0, toUserId: Int, body: String): PMTopic
-  deletePM(id: Int): PMTopic
+  createPM(topicId: Int = 0, toUserId: Int, body: String): Message
+  deletePM(id: Int): Boolean
 }
 
 schema {
