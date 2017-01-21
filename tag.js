@@ -8,7 +8,7 @@ class Tag {
 }
 */
 
-const getLeafTagId = result => result[0]
+const getLeafTagId = results => results[0]
   .filter(tag => tag.level === 2)
   .map(tag => tag.id)
 

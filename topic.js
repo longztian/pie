@@ -17,7 +17,7 @@ class Topic {
 const getRecentCreatedForumTopics = limit => tag.getForumTags()
   .then(ids => ids.join(','))
   .then(ids => query('CALL get_tag_recent_nodes(?, ?)', [ids, limit]))
-  .then(result => result[0].map(topic => ({
+  .then(results => results[0].map(topic => ({
     id: topic.nid,
     title: topic.title,
     info: topic.create_time,
@@ -26,7 +26,7 @@ const getRecentCreatedForumTopics = limit => tag.getForumTags()
 const getRecentCreatedYellowPages = limit => tag.getYellowPageTags()
   .then(ids => ids.join(','))
   .then(ids => query('CALL get_tag_recent_nodes_yp(?, ?)', [ids, limit]))
-  .then(result => result[0].map(topic => ({
+  .then(results => results[0].map(topic => ({
     id: topic.nid,
     title: topic.title,
     info: topic.exp_time,
@@ -34,7 +34,7 @@ const getRecentCreatedYellowPages = limit => tag.getYellowPageTags()
 
 const getRecentCreatedActivities = limit => query('CALL get_recent_activities(?, ?)',
   [0, limit])
-  .then(result => result[0].map(topic => ({
+  .then(results => results[0].map(topic => ({
     id: topic.nid,
     title: topic.title,
     info: topic.start_time,
@@ -43,7 +43,7 @@ const getRecentCreatedActivities = limit => query('CALL get_recent_activities(?,
 const getRecentRepliedForumTopics = limit => tag.getForumTags()
   .then(ids => ids.join(','))
   .then(ids => query('CALL get_tag_recent_comments(?, ?)', [ids, limit]))
-  .then(result => result[0].map(topic => ({
+  .then(results => results[0].map(topic => ({
     id: topic.nid,
     title: topic.title,
     info: topic.comment_count,
@@ -52,7 +52,7 @@ const getRecentRepliedForumTopics = limit => tag.getForumTags()
 const getRecentRepliedYellowPages = limit => tag.getYellowPageTags()
   .then(ids => ids.join(','))
   .then(ids => query('CALL get_tag_recent_comments_yp(?, ?)', [ids, limit]))
-  .then(result => result[0].map(topic => ({
+  .then(results => results[0].map(topic => ({
     id: topic.nid,
     title: topic.title,
     info: topic.comment_count,
@@ -61,7 +61,7 @@ const getRecentRepliedYellowPages = limit => tag.getYellowPageTags()
 const getRecentHotForumTopics = (startTime, limit) => tag.getForumTags()
   .then(ids => ids.join(','))
   .then(ids => query('CALL get_tag_hot_nodes(?, ?, ?)', [ids, startTime, limit]))
-  .then(result => result[0].map(topic => ({
+  .then(results => results[0].map(topic => ({
     id: topic.nid,
     title: topic.title,
   })))
@@ -69,7 +69,7 @@ const getRecentHotForumTopics = (startTime, limit) => tag.getForumTags()
 const getUserRecentCreatedTopics = (uid, limit) => tag.getForumTags()
   .then(ids => ids.join(','))
   .then(ids => query('CALL get_user_recent_nodes(?, ?, ?)', [ids, uid, limit]))
-  .then(result => result[0].map(topic => ({
+  .then(results => results[0].map(topic => ({
     id: topic.nid,
     title: topic.title,
     info: topic.create_time,
@@ -78,20 +78,20 @@ const getUserRecentCreatedTopics = (uid, limit) => tag.getForumTags()
 const getUserRecentRepliedTopics = (uid, limit) => tag.getForumTags()
   .then(ids => ids.join(','))
   .then(ids => query('CALL get_user_recent_comments(?, ?, ?)', [ids, uid, limit]))
-  .then(result => result[0].map(topic => ({
+  .then(results => results[0].map(topic => ({
     id: topic.nid,
     title: topic.title,
     info: topic.create_time,
   })))
 
-const toTopic = result => ({
-  id: result.msg_id,
-  title: result.body.length > 22 ? `${result.body.slice(0, 20)}...` : result.body,
-  hasNewMessage: result.is_new === 1,
-  changeTime: result.time,
+const toTopic = results => ({
+  id: results.msg_id,
+  title: results.body.length > 22 ? `${results.body.slice(0, 20)}...` : results.body,
+  hasNewMessage: results.is_new === 1,
+  changeTime: results.time,
   attendee: {
-    id: result.uid,
-    name: result.user,
+    id: results.uid,
+    name: results.user,
   },
 })
 

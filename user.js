@@ -28,7 +28,7 @@ const get = (id, fields) => {
     .join(', ')
 
   return query(`SELECT ${selections} FROM users WHERE id = ?`, [id])
-  .then(result => (result.length > 0 ? result[0] : null))
+  .then(results => (results.length > 0 ? results[0] : null))
 }
 
 const getSqlKeyValues = (data) => {
@@ -53,7 +53,7 @@ const create = (data) => {
       const vals = keys.map(() => '?').join(',')
       return query(`INSERT INTO users (${cols}) VALUES (${vals})`, values)
     })
-    .then(result => result.insertId)
+    .then(results => results.insertId)
 }
 
 const update = (id, data) => {

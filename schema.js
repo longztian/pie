@@ -62,8 +62,7 @@ type Query {
 }
 
 type Authentication {
-  uid: Int
-  name: String
+  user: User
   role: [String]
 }
 

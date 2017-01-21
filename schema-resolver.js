@@ -1,6 +1,7 @@
 import auth from './authentication'
 import topic from './topic'
 import user from './user'
+import message from './message'
 
 const twoWeeksAgo = () => Math.floor(Date.now() / 86400000 - 7 * 2) * 86400
 
@@ -26,21 +27,21 @@ export default {
                                                                  : null),
     pmCountNew: (obj, args, ctx) => {
       if (auth.isAuthenticated(ctx)) {
-        return topic.countNewPMTopics(auth.getUserId(ctx))
+        return topic.countNewPMTopics(auth.getUser(ctx).id)
       }
       return null
     },
 
     pmTopics: (obj, { mailbox, limit, offset }, ctx) => {
       if (auth.isAuthenticated(ctx)) {
-        return topic.getPMTopics(auth.getUserId(ctx), mailbox, limit, offset)
+        return topic.getPMTopics(auth.getUser(ctx).id, mailbox, limit, offset)
       }
       return null
     },
 
     pmTopic: (obj, { id }, ctx) => {
       if (auth.isAuthenticated(ctx)) {
-        return topic.getPMTopic(auth.getUserId(ctx), id)
+        return topic.getPMTopic(auth.getUser(ctx).id, id)
       }
       return null
     },
@@ -61,7 +62,7 @@ export default {
       : false),
 
     createPM: (obj, { topicId, toUserId, body }, ctx) => (auth.isAuthenticated(ctx) && !auth.isSelf(ctx, toUserId)
-      ? message.create(topicId, auth.getUserId(ctx), toUserId, body)
+      ? message.create(topicId, auth.getUser(ctx), toUserId, body)
       : null),
     deletePM: (obj, { id }, ctx) => (auth.isAuthenticated(ctx)
       ? message.delete(id)
