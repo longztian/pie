@@ -25,11 +25,20 @@ type User {
   recentRepliedTopics(limit: Int = 10): [TopicInfo]
 }
 
+type Image {
+  id: Int!,
+  name: String,
+  path: String,
+  height: Int,
+  width: Int
+}
+
 type Message {
   id: Int!
   body: String
   author: User
   createTime: Int
+  images: [Image]
 }
 
 type ForumTopic {

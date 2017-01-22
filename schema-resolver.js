@@ -16,19 +16,16 @@ export default {
   },
 
   Message: {
-    author: (obj, args, ctx, info) => user.get(obj.author.id, fields(info))
+    author: (obj, args, ctx, info) => user.get(obj.author.id, fields(info)),
+    images: obj => message.getImages(obj.id),
   },
 
   ForumTopic: {
-    messages: (obj, { limit, offset }, ctx, info) => message.getForumMessages(obj.id, limit, offset, fields(info)),
+    messages: (obj, { limit, offset }) => message.getMessages(obj.id, limit, offset),
   },
 
   YellowPageTopic: {
-    messages: (obj, { limit, offset }) => message.getYellowPageMessages(obj.id, limit, offset),
-  },
-
-  PrivMsgTopic: {
-    messages: (obj, { limit, offset }) => message.getPrivateMessages(obj.id, limit, offset),
+    messages: (obj, { limit, offset }) => message.getMessages(obj.id, limit, offset),
   },
 
   Query: {
