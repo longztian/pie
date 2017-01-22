@@ -15,6 +15,22 @@ export default {
     recentRepliedTopics: (obj, { limit }) => topic.getUserRecentRepliedTopics(obj.id, limit),
   },
 
+  Message: {
+    author: (obj, args, ctx, info) => user.get(obj.author.id, fields(info))
+  },
+
+  ForumTopic: {
+    messages: (obj, { limit, offset }, ctx, info) => message.getForumMessages(obj.id, limit, offset, fields(info)),
+  },
+
+  YellowPageTopic: {
+    messages: (obj, { limit, offset }) => message.getYellowPageMessages(obj.id, limit, offset),
+  },
+
+  PrivMsgTopic: {
+    messages: (obj, { limit, offset }) => message.getPrivateMessages(obj.id, limit, offset),
+  },
+
   Query: {
     recentCreatedForumTopics: (obj, { limit }) => topic.getRecentCreatedForumTopics(limit),
     recentCreatedYellowPages: (obj, { limit }) => topic.getRecentCreatedYellowPages(limit),
@@ -23,8 +39,22 @@ export default {
     recentRepliedYellowPages: (obj, { limit }) => topic.getRecentRepliedYellowPages(limit),
     recentHotForumTopics: (obj, { limit }) => topic.getRecentHotForumTopics(twoWeeksAgo(), limit),
 
+    bookmarkedTopics: (obj, { limit, offset }, ctx) => {
+      if (auth.isAuthenticated(ctx)) {
+        return topic.getUserBookmarkedTopcis(auth.getUser(ctx).id, limit, offset)
+      }
+      return null
+    },
+
     user: (obj, { id }, ctx, info) => (auth.isAuthenticated(ctx) ? user.get(id, fields(info))
                                                                  : null),
+
+    forumTopics: (obj, { tagId, limit, offset }) => topic.getForumTopics(tagId, limit, offset),
+    forumTopic: (obj, { id }) => topic.getForumTopic(id),
+
+    ypTopics: (obj, { tagId, limit, offset }) => topic.getYellowPageTopics(tagId, limit, offset),
+    ypTopic: (obj, { id }) => topic.getYellowPageTopic(id),
+
     pmCountNew: (obj, args, ctx) => {
       if (auth.isAuthenticated(ctx)) {
         return topic.countNewPMTopics(auth.getUser(ctx).id)
@@ -61,11 +91,47 @@ export default {
       ? user.delete(id).then(() => true)
       : false),
 
-    createPM: (obj, { topicId, toUserId, body }, ctx) => (auth.isAuthenticated(ctx) && !auth.isSelf(ctx, toUserId)
-      ? message.create(topicId, auth.getUser(ctx), toUserId, body)
-      : null),
-    deletePM: (obj, { id }, ctx) => (auth.isAuthenticated(ctx)
-      ? message.delete(id)
+    createPrivateMessage: (obj, { topicId, toUserId, body }, ctx) => {
+      if (auth.isAuthenticated(ctx) && !auth.isSelf(ctx, toUserId)) {
+        const author = auth.getUser(ctx)
+        return message.create(topicId, author.id, toUserId, body)
+          .then(msg => ({
+            ...msg,
+            author,
+            body,
+          }))
+      }
+      return null
+    },
+    deletePrivateMessage: (obj, { id }, ctx) => (auth.isAuthenticated(ctx)
+      ? message.delete(id, auth.getUser(ctx).id)
       : false),
+    deletePrivateMessages: (obj, { ids }, ctx) => {
+      if (auth.isAuthenticated(ctx)) {
+        const uid = auth.getUser(ctx).id
+        return ids.map(mid => message.delete(mid, uid))
+      }
+      return null
+    },
+
+    createBookmark: (obj, { topicId }, ctx) => {
+      if (auth.isAuthenticated(ctx)) {
+        return topic.createUserBookmark(auth.getUser(ctx).id, topicId)
+      }
+      return null
+    },
+    deleteBookmark: (obj, { topicId }, ctx) => {
+      if (auth.isAuthenticated(ctx)) {
+        return topic.deleteUserBookmark(auth.getUser(ctx).id, topicId)
+      }
+      return null
+    },
+    deleteBookmarks: (obj, { topicIds }, ctx) => {
+      if (auth.isAuthenticated(ctx)) {
+        const uid = auth.getUser(ctx).id
+        return topicIds.map(tid => topic.deleteUserBookmark(uid, tid))
+      }
+      return null
+    }
   },
 }

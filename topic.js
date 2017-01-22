@@ -84,7 +84,54 @@ const getUserRecentRepliedTopics = (uid, limit) => tag.getForumTags()
     info: topic.create_time,
   })))
 
-const toTopic = results => ({
+const forumTopic = row => ({
+  id: row.id,
+  title: row.title,
+  weight: row.weight,
+  messageCount: row.comment_count + 1,
+})
+const getForumTopics = (tagId, limit, offset) => tag.getForumTags()
+  .then((ids) => {
+    if (ids.includes(tagId)) {
+      return query('CALL get_tag_nodes_forum(1, ?, ?, ?)', [tagId, limit, offset])
+        .then(results => results[0].map(forumTopic))
+    }
+  })
+const getForumTopic = (id) => {
+  return query('SELECT id, title, weight FROM nodes WHERE id = ? AND status = 1', [id])
+    .then(results => results[0])
+}
+const ypTopic = row => ({
+  id: row.id,
+  name: row.title,
+  address: row.address,
+  phone: row.phone,
+  email: row.email,
+  website: row.website,
+  messageCount: row.comment_count + 1,
+})
+const getYellowPageTopics = (tagId, limit, offset) => tag.getYellowPageTags()
+  .then((ids) => {
+    if (ids.includes(tagId)) {
+      return query('CALL get_tag_nodes_yp(?, ?, ?)', [`${tagId}`, limit, offset])
+        .then(results => results[0].map(ypTopic))
+    }
+  })
+const getYellowPageTopic = (id) => {}
+
+const getUserBookmarkedTopcis = (uid, limit, offset) =>
+  query('CALL bookmark_list(?, ?, ?)', [uid, limit, offset])
+  .then(results => results[0])
+
+const createUserBookmark = (uid, topicId) =>
+  query('CALL bookmark_add(?, ?)', [uid, topicId])
+  .then(() => true)
+
+const deleteUserBookmark = (uid, topicId) =>
+  query('CALL bookmark_delete(?, ?)', [uid, topicId])
+  .then(() => true)
+
+const pmTopic = results => ({
   id: results.msg_id,
   title: results.body.length > 22 ? `${results.body.slice(0, 20)}...` : results.body,
   hasNewMessage: results.is_new === 1,
@@ -95,7 +142,7 @@ const toTopic = results => ({
   },
 })
 
-const toMessage = data => ({
+const message = data => ({
   id: data.id,
   createTime: data.time,
   body: data.body,
@@ -109,7 +156,7 @@ const toMessage = data => ({
 const getPMTopics = (uid, mailbox, limit, offset) => {
   const func = mailbox !== 'SENT' ? 'get_pm_list_inbox_2' : 'get_pm_list_sent_2'
   return query(`CALL ${func}(?, ?, ?)`, [uid, limit, offset])
-    .then(results => results[0].map(toTopic))
+    .then(results => results[0].map(pmTopic))
 }
 
 const getPMTopic = (uid, tid) => {
@@ -119,7 +166,7 @@ const getPMTopic = (uid, tid) => {
 
   return query('CALL get_pm(?, ?)', [tid, uid])
     .then((results) => {
-      topic.messages = results[0].map(toMessage)
+      topic.messages = results[0].map(message)
       return query('CALL get_pm_replyto(?, ?)', [tid, uid])
     }).then((results) => {
       topic.attendee = {
@@ -141,8 +188,17 @@ export default {
   getRecentCreatedActivities,
   getRecentHotForumTopics,
 
+  getForumTopics,
+  getForumTopic,
+  getYellowPageTopics,
+  getYellowPageTopic,
+
   getUserRecentCreatedTopics,
   getUserRecentRepliedTopics,
+
+  getUserBookmarkedTopcis,
+  createUserBookmark,
+  deleteUserBookmark,
 
   getPMTopics,
   getPMTopic,

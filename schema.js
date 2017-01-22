@@ -32,7 +32,25 @@ type Message {
   createTime: Int
 }
 
-type PMTopic {
+type ForumTopic {
+  id: Int!
+  title: String
+  messageCount: Int
+  messages(limit: Int = 10, offset: Int = 0): [Message]
+}
+
+type YellowPageTopic {
+  id: Int!
+  name: String
+  address: String
+  phone: String
+  email: String
+  website: String
+  messageCount: Int
+  messages(limit: Int = 10, offset: Int = 0): [Message]
+}
+
+type PrivMsgTopic {
   id: Int!
   title: String
   changeTime: Int
@@ -54,11 +72,19 @@ type Query {
   recentRepliedYellowPages(limit: Int = 10): [TopicInfo]
   recentHotForumTopics(limit: Int = 10): [TopicInfo]
 
-  user(id: Int): User
+  bookmarkedTopics(limit: Int = 10, offset: Int = 0): [TopicInfo]
+
+  user(id: Int!): User
+
+  forumTopics(tagId: Int!, limit: Int = 10, offset: Int = 0): [ForumTopic]
+  forumTopic(id: Int!): ForumTopic
+
+  ypTopics(tagId: Int!, limit: Int = 10, offset: Int = 0): [YellowPageTopic]
+  ypTopic(id: Int!): YellowPageTopic
 
   pmCountNew: Int
-  pmTopics(mailbox: Mailbox = INBOX, limit: Int = 10, offset: Int = 0): [PMTopic]
-  pmTopic(id: Int): PMTopic
+  pmTopics(mailbox: Mailbox = INBOX, limit: Int = 10, offset: Int = 0): [PrivMsgTopic]
+  pmTopic(id: Int!): PrivMsgTopic
 }
 
 type Authentication {
@@ -78,15 +104,30 @@ input UserInput {
 }
 
 type Mutation {
-  login(email: String, password: String): Authentication
+  login(email: String!, password: String!): Authentication
   logout: Authentication
 
-  createUser(data: UserInput): User
-  updateUser(id: Int, data: UserInput): User
-  deleteUser(id: Int): Boolean
+  createUser(data: UserInput!): User
+  updateUser(id: Int!, data: UserInput!): User
+  deleteUser(id: Int!): Boolean
+  deleteUsers(ids: [Int!]!): [Boolean]
 
-  createPM(topicId: Int = 0, toUserId: Int, body: String): Message
-  deletePM(id: Int): Boolean
+  createForumTopic(title: String!, body: String!, files: [Int!]): ForumTopic
+  deleteForumTopic(id: Int!): Boolean
+
+  createYellowPage(name: String!, body: String!, files: [Int!]): YellowPageTopic
+  deleteYellowPage(id: Int!): Boolean
+
+  createMessage(topicId: Int!, body: String!, files: [Int!]): Message
+  deleteMessage(id: Int!): Boolean
+
+  createPrivateMessage(topicId: Int = 0, toUserId: Int!, body: String!): Message
+  deletePrivateMessage(id: Int!): Boolean
+  deletePrivateMessages(ids: [Int!]!): [Boolean]
+
+  createBookmark(topicId: Int!): Boolean
+  deleteBookmark(topicId: Int!): Boolean
+  deleteBookmarks(topicIds: [Int!]!): [Boolean]
 }
 
 schema {
