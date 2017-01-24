@@ -42,39 +42,9 @@ const message = row => ({
   author: { id: row.uid },
 })
 
-const getMessages = (topicId, limit, offset) => {
-  offset -= 1
-  if (offset < 0) {
-    let getData, msgs = []
-    getData = query('SELECT id, body, uid, create_time FROM nodes WHERE id = ? AND status = 1', [topicId])
-                    .then((results) => {
-                      if (results.length > 0) {
-                        msgs.push(message(results[0]))
-                        return true
-                      } else {
-                        return false
-                      }
-                    })
-    limit -= 1
-    if (limit > 0) {
-      getData = getData.then((success) => {
-        if (success) {
-          return query('SELECT id, body, uid, create_time FROM comments WHERE nid = ? LIMIT ?', [topicId, limit])
-            .then((results) => {
-              msgs = [
-                msgs[0],
-                ...results.map(message)
-              ]
-            })
-        }
-      })
-    }
-    return getData.then(() => msgs)
-  } else {
-    return query('SELECT id, body, uid, create_time FROM comments WHERE nid = ? LIMIT ? OFFSET ?', [topicId, limit, offset])
-            .then(results => results.map(message))
-  }
-}
+const getMessages = (topicId, limit, offset) =>
+  query('SELECT id, body, uid, create_time FROM comments WHERE nid = ? LIMIT ? OFFSET ?', [topicId, limit, offset])
+  .then(results => results.map(message))
 
 const getImages = msgId => query('SELECT id, name, path, height, width FROM images WHERE nid = ?', [msgId])
 

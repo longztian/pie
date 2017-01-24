@@ -3,7 +3,7 @@ import topic from './topic'
 import user from './user'
 import message from './message'
 
-const twoWeeksAgo = () => Math.floor(Date.now() / 86400000 - 7 * 2) * 86400
+const twoWeeksAgo = () => Math.floor((Date.now() / 86400000) - 14) * 86400
 
 const fields = info => info.fieldNodes[0].selectionSet.selections
   .map(selection => selection.name.value)
@@ -129,6 +129,6 @@ export default {
         return topicIds.map(tid => topic.deleteUserBookmark(uid, tid))
       }
       return null
-    }
+    },
   },
 }

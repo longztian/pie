@@ -96,11 +96,11 @@ const getForumTopics = (tagId, limit, offset) => tag.getForumTags()
       return query('CALL get_tag_nodes_forum(1, ?, ?, ?)', [tagId, limit, offset])
         .then(results => results[0].map(forumTopic))
     }
+    return null
   })
-const getForumTopic = (id) => {
-  return query('SELECT id, title FROM nodes WHERE id = ? AND status = 1', [id])
-    .then(results => results[0])
-}
+const getForumTopic = id => query('SELECT id, title FROM nodes WHERE id = ? AND status = 1', [id])
+  .then(results => results[0])
+
 const ypTopic = row => ({
   id: row.id,
   name: row.title,
@@ -116,11 +116,11 @@ const getYellowPageTopics = (tagId, limit, offset) => tag.getYellowPageTags()
       return query('CALL get_tag_nodes_yp(?, ?, ?)', [`${tagId}`, limit, offset])
         .then(results => results[0].map(ypTopic))
     }
+    return null
   })
-const getYellowPageTopic = (id) => {
-  return query('SELECT id, title AS name, address, phone, email, website FROM nodes AS n JOIN node_yellowpages AS yp ON n.id = yp.nid WHERE n.id = ? AND status = 1', [id])
-    .then(results => results[0])
-}
+const getYellowPageTopic = id =>
+  query('SELECT id, title AS name, address, phone, email, website FROM nodes AS n JOIN node_yellowpages AS yp ON n.id = yp.nid WHERE n.id = ? AND status = 1', [id])
+  .then(results => results[0])
 
 const getUserBookmarkedTopcis = (uid, limit, offset) =>
   query('CALL bookmark_list(?, ?, ?)', [uid, limit, offset])

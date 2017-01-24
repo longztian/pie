@@ -18,30 +18,30 @@ const isSelf = (ctx, uid) => ctx.session.auth && ctx.session.auth.user.id === ui
 
 const isAdmin = ctx => ctx.session.auth && ctx.session.auth.user.id === 1
 
-const isTempIdentified = ctx => true
+const isTempIdentified = ctx => ctx
 
 const getUser = ctx => (ctx.session.auth ? ctx.session.auth.user : guest())
 
 const login = (ctx, email, password) => {
-  if (isAuthenticated(ctx)) throw `you have already logged in as ${ctx.session.auth.user.name}`
+  if (isAuthenticated(ctx)) throw new Error(`you have already logged in as ${ctx.session.auth.user.name}`)
 
   return query('SELECT id, username AS name, avatar, password FROM users WHERE email = ?', [email])
-  .then((results) => {
-    if (results.length === 0) throw `Account does not exist: ${email}`
+    .then((results) => {
+      if (results.length === 0) throw new Error(`Account does not exist: ${email}`)
 
-    const user = results[0]
-    if (user.password !== hash(password)) throw 'Wrong password'
+      const user = results[0]
+      if (user.password !== hash(password)) throw new Error('Wrong password')
 
-    delete user.password
+      delete user.password
 
-    ctx.sessionHandler.regenerateId()
-    ctx.session.auth = new Authentication(user, [])
-    return ctx.session.auth
-  })
+      ctx.sessionHandler.regenerateId()
+      ctx.session.auth = new Authentication(user, [])
+      return ctx.session.auth
+    })
 }
 
 const logout = (ctx) => {
-  if (!isAuthenticated(ctx)) throw 'You have not logged in yet'
+  if (!isAuthenticated(ctx)) throw new Error('You have not logged in yet')
 
   ctx.session = null
   return new Authentication(guest(), [])
