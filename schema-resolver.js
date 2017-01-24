@@ -88,6 +88,13 @@ export default {
       ? user.delete(id).then(() => true)
       : false),
 
+    createForumTopic: (obj, { title }, ctx) => {},
+    createYellowPage: (obj, { name, address, phone, email, website }, ctx) => {},
+    deleteTopic: (obj, { id }, ctx) => {},
+
+    createMessage: (obj, { topicId, body, images }, ctx) => {},
+    deleteMessage: (obj, { id }, ctx) => {},
+
     createPrivateMessage: (obj, { topicId, toUserId, body }, ctx) => {
       if (auth.isAuthenticated(ctx) && !auth.isSelf(ctx, toUserId)) {
         const author = auth.getUser(ctx)

@@ -122,6 +122,14 @@ const getYellowPageTopic = id =>
   query('SELECT id, title AS name, address, phone, email, website FROM nodes AS n JOIN node_yellowpages AS yp ON n.id = yp.nid WHERE n.id = ? AND status = 1', [id])
   .then(results => results[0])
 
+const createForumTopic: (uid, title) => {}
+const createYellowPage: (uid, name, address, phone, email, website) => {}
+
+const deleteTopic: (uid, tid) => {}
+
+const createMessage: (uid, tid, body, images) => {}
+const deleteMessage: (uid, mid) => {}
+
 const getUserBookmarkedTopcis = (uid, limit, offset) =>
   query('CALL bookmark_list(?, ?, ?)', [uid, limit, offset])
   .then(results => results[0])
