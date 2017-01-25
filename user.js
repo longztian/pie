@@ -31,39 +31,35 @@ const get = (id, fields) => {
   .then(results => (results.length > 0 ? results[0] : null))
 }
 
-const getSqlKeyValues = (data) => {
+const getSqlKeyValues = (data, columns) => {
   const fields = Object.keys(data)
-  if (fields.length === 0) return Promise.reject('Error: no data to update')
+  if (fields.length === 0) throw new Error('Error: no data to update')
 
   const dbFields = fields.filter(field => columns[field])
-  if (fields.length !== dbFields.length) return Promise.reject('Internal Error: unknown DB field')
+  if (fields.length !== dbFields.length) throw new Error('Internal Error: unknown DB field')
 
-  return Promise.resolve({
+  return {
     keys: dbFields.map(field => columns[field]),
-    values: Object.values(data),
-  })
+    values: dbFields.map(field => data[field]),
+  }
 }
 
 const create = (data) => {
   if (data.password) data.password = hash(data.password)
 
-  return getSqlKeyValues(data)
-    .then(({ keys, values }) => {
-      const cols = keys.join(',')
-      const vals = keys.map(() => '?').join(',')
-      return query(`INSERT INTO users (${cols}) VALUES (${vals})`, values)
-    })
+  const { keys, values } = getSqlKeyValues(data, columns)
+  const cols = keys.join(',')
+  const vals = keys.map(() => '?').join(',')
+  return query(`INSERT INTO users (${cols}) VALUES (${vals})`, values)
     .then(results => results.insertId)
 }
 
 const update = (id, data) => {
   if (data.password) data.password = hash(data.password)
 
-  return getSqlKeyValues(data)
-    .then(({ keys, values }) => {
-      const cols = keys.map(field => `${field}=?`).join(', ')
-      return query(`UPDATE users SET ${cols} WHERE id = ${id}`, values)
-    })
+  const { keys, values } = getSqlKeyValues(data, columns)
+  const cols = keys.map(field => `${field}=?`).join(', ')
+  return query(`UPDATE users SET ${cols} WHERE id = ${id}`, values)
     .then(() => id)
 }
 

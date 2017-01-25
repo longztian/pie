@@ -149,6 +149,52 @@ const createYellowPage = (userId, tagId, name, address, phone, email, website) =
       })))
 }
 
+const updateForumTopic = (userId, topicId, tagId, title) => {
+  const timestamp = Math.floor(Date.now() / 1000)
+  const keys = []
+  const values = []
+  if (tagId !== undefined) {
+    keys.push('tid = ?')
+    values.push(tagId)
+  }
+  if (title !== undefined) {
+    keys.push('title = ?')
+    values.push(title)
+  }
+  if (keys.length > 0) {
+    values.push(topicId)
+    return query(`UPDATE nodes SET ${keys.join(',')} WHERE id = ?}`, values)
+    .then(() => ({
+      id: topicId,
+      title,
+    }))
+  }
+  return null
+}
+const updateYellowPage = (userId, topicId, tagId, name, address, phone, email, website) => {
+  const keys = []
+  const values = []
+  if (tagId !== undefined) {
+    keys.push('tid = ?')
+    values.push(tagId)
+  }
+  if (keys.length > 0) {
+    values.push(topicId)
+    return query(`UPDATE nodes SET ${keys.join(',')} WHERE id = ?}`, values)
+    .then(() =>
+      query(`UPDATE node_yellowpages SET ${keys.join(',')} WHERE id = ?}`, values)
+      .then(() => ({
+        id: topicId,
+        name,
+        address,
+        phone,
+        email,
+        website,
+      })))
+  }
+  return null
+}
+
 const deleteTopic = (userId, topicId) =>
   query('SELECT uid, status FROM nodes WHERE id = ?', [topicId])
     .then((results) => {
@@ -157,35 +203,6 @@ const deleteTopic = (userId, topicId) =>
       if (results[0].status === 0) return true
 
       return query('UPDATE nodes SET status = 0 WHERE id = ?', [topicId]).then(() => true)
-    })
-
-const createMessage = (userId, topicId, body, images) => {
-  const timestamp = Math.floor(Date.now() / 1000)
-  return query('INSERT INTO comments (uid, nid, body, create_time) VALUES (?, ?, ?, ?)',
-                [userId, topicId, body, timestamp])
-    .then((results) => {
-      const messageId = results.insertId
-      let action = Promise.resolve()
-      if (images && images.length > 0) {
-        action = query(`UPDATE images SET tid = ?, cid = ? WHERE id IN (${images.join(',')})`, [topicId, messageId])
-      }
-
-      return action.then(() => ({
-        id: messageId,
-        body,
-        author: {
-          id: userId,
-        },
-        createTime: timestamp,
-      }))
-    })
-}
-const deleteMessage = (userId, messageId) =>
-  query('SELECT uid FROM comments WHERE id = ?', [messageId])
-    .then((results) => {
-      if (results.length === 0) return true
-      if (results[0].uid !== userId) throw new Error('Not permitted')
-      return query('DELETE FROM comments WHERE id = ?', [messageId]).then(() => true)
     })
 
 const getUserBookmarkedTopcis = (userId, limit, offset) =>
@@ -200,7 +217,7 @@ const deleteUserBookmark = (userId, topicId) =>
   query('CALL bookmark_delete(?, ?)', [userId, topicId])
   .then(() => true)
 
-const pmTopic = results => ({
+const toPMTopic = results => ({
   id: results.msg_id,
   title: results.body.length > 22 ? `${results.body.slice(0, 20)}...` : results.body,
   hasNewMessage: results.is_new === 1,
@@ -211,7 +228,7 @@ const pmTopic = results => ({
   },
 })
 
-const message = data => ({
+const toPMMessage = data => ({
   id: data.id,
   createTime: data.time,
   body: data.body,
@@ -225,7 +242,7 @@ const message = data => ({
 const getPMTopics = (userId, mailbox, limit, offset) => {
   const func = mailbox !== 'SENT' ? 'get_pm_list_inbox_2' : 'get_pm_list_sent_2'
   return query(`CALL ${func}(?, ?, ?)`, [userId, limit, offset])
-    .then(results => results[0].map(pmTopic))
+    .then(results => results[0].map(toPMTopic))
 }
 
 const getPMTopic = (userId, topicId) => {
@@ -235,7 +252,7 @@ const getPMTopic = (userId, topicId) => {
 
   return query('CALL get_pm(?, ?)', [topicId, userId])
     .then((results) => {
-      topic.messages = results[0].map(message)
+      topic.messages = results[0].map(toPMMessage)
       return query('CALL get_pm_replyto(?, ?)', [topicId, userId])
     }).then((results) => {
       topic.attendee = {
@@ -264,9 +281,9 @@ export default {
 
   createForumTopic,
   createYellowPage,
+  updateForumTopic,
+  updateYellowPage,
   deleteTopic,
-  createMessage,
-  deleteMessage,
 
   getUserRecentCreatedTopics,
   getUserRecentRepliedTopics,
