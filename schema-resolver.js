@@ -88,17 +88,27 @@ export default {
       ? user.delete(id).then(() => true)
       : false),
 
-    createForumTopic: (obj, { title }, ctx) => {},
-    createYellowPage: (obj, { name, address, phone, email, website }, ctx) => {},
-    deleteTopic: (obj, { id }, ctx) => {},
+    createForumTopic: (obj, { tagId, title }, ctx) => (auth.isAuthenticated(ctx)
+      ? topic.createForumTopic(auth.getUser(ctx).id, tagId, title)
+      : null),
+    createYellowPage: (obj, { tagId, name, address, phone, email, website }, ctx) => (auth.isAuthenticated(ctx)
+      ? topic.createYellowPage(auth.getUser(ctx).id, tagId, name, address, phone, email, website)
+      : null),
+    deleteTopic: (obj, { id }, ctx) => (auth.isAuthenticated(ctx)
+      ? topic.deleteTopic(auth.getUser(ctx).id, id)
+      : false),
 
-    createMessage: (obj, { topicId, body, images }, ctx) => {},
-    deleteMessage: (obj, { id }, ctx) => {},
+    createMessage: (obj, { topicId, body, images }, ctx) => (auth.isAuthenticated(ctx)
+      ? topic.createMessage(auth.getUser(ctx).id, topicId, body, images)
+      : null),
+    deleteMessage: (obj, { id }, ctx) => (auth.isAuthenticated(ctx)
+      ? topic.deleteMessage(auth.getUser(ctx).id, id)
+      : false),
 
     createPrivateMessage: (obj, { topicId, toUserId, body }, ctx) => {
       if (auth.isAuthenticated(ctx) && !auth.isSelf(ctx, toUserId)) {
         const author = auth.getUser(ctx)
-        return message.create(topicId, author.id, toUserId, body)
+        return message.create(author.id, topicId, toUserId, body)
           .then(msg => ({
             ...msg,
             author,
@@ -108,12 +118,12 @@ export default {
       return null
     },
     deletePrivateMessage: (obj, { id }, ctx) => (auth.isAuthenticated(ctx)
-      ? message.delete(id, auth.getUser(ctx).id)
+      ? message.delete(auth.getUser(ctx).id, id)
       : false),
     deletePrivateMessages: (obj, { ids }, ctx) => {
       if (auth.isAuthenticated(ctx)) {
         const uid = auth.getUser(ctx).id
-        return ids.map(mid => message.delete(mid, uid))
+        return ids.map(mid => message.delete(uid, mid))
       }
       return null
     },

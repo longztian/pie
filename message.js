@@ -12,16 +12,16 @@ class Message {
 }
 */
 
-const create = (tid, fromUid, toUid, body) => {
+const create = (userId, topicId, toUserId, body) => {
   const timestamp = Math.floor(Date.now() / 1000)
 
   let getData
-  if (tid > 0) {
+  if (topicId > 0) {
     getData = query('INSERT INTO priv_msgs (msg_id, from_uid, to_uid, body, time) VALUES (?, ?, ?, ?, ?)',
-                    [tid, fromUid, toUid, body, timestamp])
+                    [topicId, userId, toUserId, body, timestamp])
   } else {
     getData = query('INSERT INTO priv_msgs (from_uid, to_uid, body, time) VALUES (?, ?, ?, ?)',
-                     [fromUid, toUid, body, timestamp])
+                     [userId, toUserId, body, timestamp])
                 .then(results => query('UPDATE priv_msgs SET msg_id = id WHERE id = ?', [results.insertId])
                                 .then(() => results))
   }
@@ -32,8 +32,8 @@ const create = (tid, fromUid, toUid, body) => {
   }))
 }
 
-const deleteMsg = (mid, uid) => query('CALL delete_pm(?, ?)', [mid, uid])
-                                .then(() => true)
+const deleteMsg = (userId, messageId) => query('CALL delete_pm(?, ?)', [messageId, userId])
+                                          .then(() => true)
 
 const message = row => ({
   id: row.id,
@@ -46,7 +46,7 @@ const getMessages = (topicId, limit, offset) =>
   query('SELECT id, body, uid, create_time FROM comments WHERE nid = ? LIMIT ? OFFSET ?', [topicId, limit, offset])
   .then(results => results.map(message))
 
-const getImages = msgId => query('SELECT id, name, path, height, width FROM images WHERE nid = ?', [msgId])
+const getImages = messageId => query('SELECT id, name, path, height, width FROM images WHERE nid = ?', [messageId])
 
 export default {
   create,

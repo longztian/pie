@@ -120,11 +120,14 @@ type Mutation {
   updateUser(id: Int!, data: UserInput!): User
   deleteUser(id: Int!): Boolean
 
-  createForumTopic(title: String!): ForumTopic
-  createYellowPage(name: String!, address: String, phone: String, email: String, website: String): YellowPageTopic
+  createForumTopic(tagId: Int!, title: String!): ForumTopic
+  createYellowPage(tagId: Int!, name: String!, address: String, phone: String, email: String, website: String): YellowPageTopic
+  updateForumTopic(id: Int!, tagId: Int, title: String): ForumTopic
+  updateYellowPage(id: Int!, tagId: Int, name: String, address: String, phone: String, email: String, website: String): YellowPageTopic
   deleteTopic(id: Int!): Boolean
 
-  createMessage(topicId: Int!, body: String!, files: [Int!]): Message
+  createMessage(topicId: Int!, body: String!, imageIds: [Int!]): Message
+  updateMessage(id: Int!, body: String, imagesIds: [Int!]): Message
   deleteMessage(id: Int!): Boolean
 
   createPrivateMessage(topicId: Int = 0, toUserId: Int!, body: String!): Message
