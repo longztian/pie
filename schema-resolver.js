@@ -105,7 +105,10 @@ export default {
       : false),
 
     createMessage: (obj, { topicId, body, images }, ctx) => (auth.isAuthenticated(ctx)
-      ? message.create(auth.getUser(ctx).id, topicId, body, images)
+      ? message.create(auth.getUser(ctx).id, topicId, body, imageIds)
+      : null),
+    updateMessage: (obj, { id, body, images }, ctx) => (auth.isAuthenticated(ctx)
+      ? message.create(auth.getUser(ctx).id, id, body, imageIds)
       : null),
     deleteMessage: (obj, { id }, ctx) => (auth.isAuthenticated(ctx)
       ? message.delete(auth.getUser(ctx).id, id)

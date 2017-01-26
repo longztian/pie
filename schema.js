@@ -112,6 +112,12 @@ input UserInput {
   info: String
 }
 
+input ImageInput {
+  id: Int
+  name: String
+  path: String
+}
+
 type Mutation {
   login(email: String!, password: String!): Authentication
   logout: Authentication
@@ -126,8 +132,8 @@ type Mutation {
   updateYellowPage(id: Int!, tagId: Int, name: String, address: String, phone: String, email: String, website: String): YellowPageTopic
   deleteTopic(id: Int!): Boolean
 
-  createMessage(topicId: Int!, body: String!, imageIds: [Int!]): Message
-  updateMessage(id: Int!, body: String, imagesIds: [Int!]): Message
+  createMessage(topicId: Int!, body: String!, images: [ImageInput!]): Message
+  updateMessage(id: Int!, body: String, images: [ImageInput!]): Message
   deleteMessage(id: Int!): Boolean
 
   createPrivateMessage(topicId: Int = 0, toUserId: Int!, body: String!): Message
