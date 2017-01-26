@@ -9,7 +9,7 @@ const toColumnValue = (data, fieldColumnMap) => {
 
 export const toSelectColumns = (fields, fieldColumnMap) => {
   const dbFields = fields.filter(field => fieldColumnMap[field])
-  if (dbFields.length === 0) throw new Error('no column to select')
+  if (dbFields.length === 0) return ''
 
   return dbFields
     .map(field => (field === fieldColumnMap[field] ? field : `${fieldColumnMap[field]} AS ${field}`))
@@ -18,7 +18,7 @@ export const toSelectColumns = (fields, fieldColumnMap) => {
 
 export const toInsertColumnValues = (data, fieldColumnMap) => {
   const { columns, values } = toColumnValue(data, fieldColumnMap)
-  if (columns.length === 0) throw new Error('no column to insert')
+  if (columns.length === 0) return { columns: '', values }
 
   return {
     columns: `(${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
@@ -28,7 +28,7 @@ export const toInsertColumnValues = (data, fieldColumnMap) => {
 
 export const toUpdateColumnValues = (data, fieldColumnMap) => {
   const { columns, values } = toColumnValue(data, fieldColumnMap)
-  if (columns.length === 0) throw new Error('no column to update')
+  if (columns.length === 0) return { columns: '', values }
 
   return {
     columns: columns.map(column => `${column}=?`).join(', '),

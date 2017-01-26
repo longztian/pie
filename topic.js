@@ -89,24 +89,25 @@ const getUserRecentRepliedTopics = (userId, limit) => tag.getForumTags()
     info: topic.create_time,
   })))
 
-const forumTopic = row => ({
+const toForumTopic = row => ({
   id: row.id,
   title: row.title,
   weight: row.weight,
   messageCount: row.comment_count + 1,
 })
+
 const getForumTopics = (tagId, limit, offset) => tag.getForumTags()
   .then((ids) => {
     if (ids.includes(tagId)) {
       return query('CALL get_tag_nodes_forum(1, ?, ?, ?)', [tagId, limit, offset])
-        .then(results => results[0].map(forumTopic))
+        .then(results => results[0].map(toForumTopic))
     }
     return null
   })
 const getForumTopic = id => query('SELECT id, title FROM nodes WHERE id = ? AND status = 1', [id])
   .then(results => (results.length > 0 ? results[0] : null))
 
-const ypTopic = row => ({
+const toYellowPage = row => ({
   id: row.id,
   name: row.title,
   address: row.address,
@@ -115,11 +116,12 @@ const ypTopic = row => ({
   website: row.website,
   messageCount: row.comment_count + 1,
 })
+
 const getYellowPageTopics = (tagId, limit, offset) => tag.getYellowPageTags()
   .then((ids) => {
     if (ids.includes(tagId)) {
       return query('CALL get_tag_nodes_yp(?, ?, ?)', [`${tagId}`, limit, offset])
-        .then(results => results[0].map(ypTopic))
+        .then(results => results[0].map(toYellowPage))
     }
     return null
   })
@@ -133,10 +135,13 @@ const ypFieldColumnMap = {
   website: 'website',
   topicId: 'nid',
 }
+
 const getYellowPageTopic = (id, fields) => {
   if (fields.length === 1 && fields[0] === 'id') return { id }
 
   const columns = toSelectColumns(fields, ypFieldColumnMap)
+  if (columns.length === 0) throw new Error('No database columns found')
+
   return query(`SELECT ${columns} FROM nodes AS n JOIN node_yellowpages AS yp ON n.id = yp.nid WHERE n.id = ? AND status = 1`, [id])
     .then(results => (results.length > 0 ? results[0] : null))
 }
@@ -148,6 +153,7 @@ const topicFieldColumnMap = {
   createTime: 'create_time',
   status: 'status',
 }
+
 const createForumTopic = (userId, tagId, title) => {
   const timestamp = Math.floor(Date.now() / 1000)
   const { columns, values } = toInsertColumnValues({
@@ -157,33 +163,39 @@ const createForumTopic = (userId, tagId, title) => {
     createTime: timestamp,
     status: 1,
   }, topicFieldColumnMap)
+  if (columns.length === 0) throw new Error('No database columns found')
+
   return query(`INSERT INTO nodes ${columns}`, values)
     .then(results => ({
       id: results.insertId,
       title,
     }))
 }
+
 const createYellowPage = (userId, tagId, name, address, phone, email, website) => {
   const timestamp = Math.floor(Date.now() / 1000)
-  let { columns, values } = toInsertColumnValues({
+  let cv = toInsertColumnValues({
     userId,
     tagId,
     title: name,
     createTime: timestamp,
     status: 1,
   }, topicFieldColumnMap)
-  return query(`INSERT INTO nodes ${columns}`, values)
+  if (cv.columns.length === 0) throw new Error('No database columns found')
+
+  return query(`INSERT INTO nodes ${cv.columns}`, cv.values)
     .then(results => results.insertId)
     .then((topicId) => {
-      let { columns, values } = toInsertColumnValues({
+      cv = toInsertColumnValues({
         topicId,
         address,
         phone,
         email,
         website,
       }, ypFieldColumnMap)
+      if (cv.columns.length === 0) throw new Error('No database columns found')
 
-      return query(`INSERT INTO node_yellowpages ${columns}`, values)
+      return query(`INSERT INTO node_yellowpages ${cv.columns}`, cv.values)
         .then(() => ({
           id: topicId,
           name,
@@ -197,48 +209,54 @@ const createYellowPage = (userId, tagId, name, address, phone, email, website) =
 
 const updateForumTopic = (userId, topicId, tagId, title) => {
   // check user ownership
-  const timestamp = Math.floor(Date.now() / 1000)
   const { columns, values } = toUpdateColumnValues({
     tagId,
     title,
   }, topicFieldColumnMap)
+  if (columns.length === 0) throw new Error('No database columns found')
 
   values.push(topicId)
   return query(`UPDATE nodes SET ${columns} WHERE id = ?`, values)
-  .then(() => ({
-    id: topicId,
-    title,
-  }))
+    .then(() => ({
+      id: topicId,
+      title,
+    }))
 }
 const updateYellowPage = (userId, topicId, tagId, name, address, phone, email, website) => {
   // check user ownership
-  const timestamp = Math.floor(Date.now() / 1000)
-  let { columns, values } = toUpdateColumnValues({
+  let cv = toUpdateColumnValues({
     tagId,
     title: name,
   }, topicFieldColumnMap)
 
-  values.push(topicId)
-  return query(`UPDATE nodes SET ${columns} WHERE id = ?`, values)
-  .then(() => {
-    let { columns, values } = toUpdateColumnValues({
-      address,
-      phone,
-      email,
-      website,
-    }, ypFieldColumnMap)
+  let action
+  if (cv.columns.length === 0) {
+    action = Promise.resolve()
+  } else {
+    cv.values.push(topicId)
+    action = query(`UPDATE nodes SET ${cv.columns} WHERE id = ?`, cv.values)
+  }
 
-    values.push(topicId)
-    return query(`UPDATE node_yellowpages SET ${columns} WHERE nid = ?`, values)
-      .then(() => ({
-        id: topicId,
-        name,
-        address,
-        phone,
-        email,
-        website,
-      }))
-  })
+  cv = toUpdateColumnValues({
+    address,
+    phone,
+    email,
+    website,
+  }, ypFieldColumnMap)
+
+  if (cv.columns.length > 0) {
+    cv.values.push(topicId)
+    action = action.then(() => query(`UPDATE node_yellowpages SET ${cv.columns} WHERE nid = ?`, cv.values))
+  }
+
+  return action.then(() => ({
+    id: topicId,
+    name,
+    address,
+    phone,
+    email,
+    website,
+  }))
 }
 
 const deleteTopic = (userId, topicId) =>
@@ -248,8 +266,8 @@ const deleteTopic = (userId, topicId) =>
       if (results[0].uid !== userId) throw new Error('Not permitted')
       if (results[0].status === 0) return true
 
-      return query('UPDATE nodes SET status = 0 WHERE id = ?', [topicId]).then(() => true)
-    })
+      return query('UPDATE nodes SET status = 0 WHERE id = ?', [topicId])
+    }).then(() => true)
 
 const getUserBookmarkedTopcis = (userId, limit, offset) =>
   query('CALL bookmark_list(?, ?, ?)', [userId, limit, offset])

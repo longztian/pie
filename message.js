@@ -15,18 +15,18 @@ class Message {
 const createPrivateMessage = (userId, topicId, toUserId, body) => {
   const timestamp = Math.floor(Date.now() / 1000)
 
-  let getData
+  let action
   if (topicId > 0) {
-    getData = query('INSERT INTO priv_msgs (msg_id, from_uid, to_uid, body, time) VALUES (?, ?, ?, ?, ?)',
+    action = query('INSERT INTO priv_msgs (msg_id, from_uid, to_uid, body, time) VALUES (?, ?, ?, ?, ?)',
                     [topicId, userId, toUserId, body, timestamp])
   } else {
-    getData = query('INSERT INTO priv_msgs (from_uid, to_uid, body, time) VALUES (?, ?, ?, ?)',
-                     [userId, toUserId, body, timestamp])
+    action = query('INSERT INTO priv_msgs (from_uid, to_uid, body, time) VALUES (?, ?, ?, ?)',
+                    [userId, toUserId, body, timestamp])
                 .then(results => query('UPDATE priv_msgs SET msg_id = id WHERE id = ?', [results.insertId])
                                 .then(() => results))
   }
 
-  return getData.then(results => ({
+  return action.then(results => ({
     id: results.insertId,
     createTime: timestamp,
   }))
@@ -40,9 +40,11 @@ const createMessage = (userId, topicId, body, images) => {
                 [userId, topicId, body, timestamp])
     .then((results) => {
       const messageId = results.insertId
-      let action = Promise.resolve()
+      let action
       if (images && images.length > 0) {
         action = query(`UPDATE images SET tid = ?, cid = ? WHERE id IN (${images.join(',')})`, [topicId, messageId])
+      } else {
+        action = Promise.resolve()
       }
 
       return action.then(() => ({
@@ -62,9 +64,11 @@ const updateMessage = (userId, topicId, body, images) => {
                 [userId, topicId, body, timestamp])
     .then((results) => {
       const messageId = results.insertId
-      let action = Promise.resolve()
+      let action
       if (images && images.length > 0) {
         action = query(`UPDATE images SET tid = ?, cid = ? WHERE id IN (${images.join(',')})`, [topicId, messageId])
+      } else {
+        action = Promise.resolve()
       }
 
       return action.then(() => ({
@@ -86,7 +90,7 @@ const deleteMessage = (userId, messageId) =>
       return query('DELETE FROM comments WHERE id = ?', [messageId]).then(() => true)
     })
 
-const message = row => ({
+const toMessage = row => ({
   id: row.id,
   body: row.body,
   createTime: row.create_time,
@@ -95,7 +99,7 @@ const message = row => ({
 
 const getMessages = (topicId, limit, offset) =>
   query('SELECT id, body, uid, create_time FROM comments WHERE nid = ? LIMIT ? OFFSET ?', [topicId, limit, offset])
-  .then(results => results.map(message))
+  .then(results => results.map(toMessage))
 
 const getImages = messageId => query('SELECT id, name, path, height, width FROM images WHERE nid = ?', [messageId])
 
