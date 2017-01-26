@@ -50,7 +50,7 @@ export default {
     forumTopic: (obj, { id }) => topic.getForumTopic(id),
 
     ypTopics: (obj, { tagId, limit, offset }) => topic.getYellowPageTopics(tagId, limit, offset),
-    ypTopic: (obj, { id }) => topic.getYellowPageTopic(id),
+    ypTopic: (obj, { id }, ctx, info) => topic.getYellowPageTopic(id, fields(info)),
 
     pmCountNew: (obj, args, ctx) => {
       if (auth.isAuthenticated(ctx)) {
@@ -81,7 +81,7 @@ export default {
     createUser: (obj, { data }, ctx, info) => (auth.isTempIdentified(ctx)
       ? user.create(data).then(uid => user.get(uid, fields(info)))
       : null),
-    updateUser: (obj, { id, data }, ctx, info) => (auth.isSelf(ctx, id)
+    updateUser: (obj, { id, data }, ctx, info) => (auth.isSelf(ctx, id) || auth.isAdmin(ctx)
       ? user.update(id, data).then(uid => user.get(uid, fields(info)))
       : null),
     deleteUser: (obj, { id }, ctx) => (auth.isAdmin(ctx) && !auth.isSelf(ctx, id)

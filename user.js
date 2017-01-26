@@ -1,7 +1,12 @@
 import query from './db/query'
+import {
+  toSelectColumns,
+  toInsertColumnValues,
+  toUpdateColumnValues,
+} from './db/toColumnValue'
 import { hash } from './password'
 
-const columns = {
+const fieldColumnMap = {
   id: 'id',
   name: 'username',
   email: 'email',
@@ -18,48 +23,26 @@ const columns = {
 }
 
 const get = (id, fields) => {
-  const dbFields = fields.filter(field => columns[field])
-  if (dbFields.length === 0 || (dbFields.length === 1 && dbFields[0] === 'id')) {
-    return { id }
-  }
+  if (fields.length === 1 && fields[0] === 'id') return { id }
 
-  const selections = dbFields
-    .map(field => (field === columns[field] ? field : `${columns[field]} AS ${field}`))
-    .join(', ')
-
-  return query(`SELECT ${selections} FROM users WHERE id = ?`, [id])
-  .then(results => (results.length > 0 ? results[0] : null))
-}
-
-const getSqlKeyValues = (data, columns) => {
-  const fields = Object.keys(data)
-  if (fields.length === 0) throw new Error('Error: no data to update')
-
-  const dbFields = fields.filter(field => columns[field])
-  if (fields.length !== dbFields.length) throw new Error('Internal Error: unknown DB field')
-
-  return {
-    keys: dbFields.map(field => columns[field]),
-    values: dbFields.map(field => data[field]),
-  }
+  const columns = toSelectColumns(fields, fieldColumnMap)
+  return query(`SELECT ${columns} FROM users WHERE id = ?`, [id])
+    .then(results => (results.length > 0 ? results[0] : null))
 }
 
 const create = (data) => {
   if (data.password) data.password = hash(data.password)
 
-  const { keys, values } = getSqlKeyValues(data, columns)
-  const cols = keys.join(',')
-  const vals = keys.map(() => '?').join(',')
-  return query(`INSERT INTO users (${cols}) VALUES (${vals})`, values)
+  const { columns, values } = toInsertColumnValues(data, fieldColumnMap)
+  return query(`INSERT INTO users ${columns}`, values)
     .then(results => results.insertId)
 }
 
 const update = (id, data) => {
   if (data.password) data.password = hash(data.password)
 
-  const { keys, values } = getSqlKeyValues(data, columns)
-  const cols = keys.map(field => `${field}=?`).join(', ')
-  return query(`UPDATE users SET ${cols} WHERE id = ${id}`, values)
+  const { columns, values } = toUpdateColumnValues(data, fieldColumnMap)
+  return query(`UPDATE users SET ${columns} WHERE id = ${id}`, values)
     .then(() => id)
 }
 

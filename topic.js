@@ -1,4 +1,9 @@
 import query from './db/query'
+import {
+  toSelectColumns,
+  toInsertColumnValues,
+  toUpdateColumnValues,
+} from './db/toColumnValue'
 import tag from './tag'
 
 /*
@@ -99,7 +104,7 @@ const getForumTopics = (tagId, limit, offset) => tag.getForumTags()
     return null
   })
 const getForumTopic = id => query('SELECT id, title FROM nodes WHERE id = ? AND status = 1', [id])
-  .then(results => results[0])
+  .then(results => (results.length > 0 ? results[0] : null))
 
 const ypTopic = row => ({
   id: row.id,
@@ -118,14 +123,41 @@ const getYellowPageTopics = (tagId, limit, offset) => tag.getYellowPageTags()
     }
     return null
   })
-const getYellowPageTopic = id =>
-  query('SELECT id, title AS name, address, phone, email, website FROM nodes AS n JOIN node_yellowpages AS yp ON n.id = yp.nid WHERE n.id = ? AND status = 1', [id])
-  .then(results => results[0])
 
+const ypFieldColumnMap = {
+  id: 'id',
+  name: 'title',
+  address: 'address',
+  phone: 'phone',
+  email: 'email',
+  website: 'website',
+  topicId: 'nid',
+}
+const getYellowPageTopic = (id, fields) => {
+  if (fields.length === 1 && fields[0] === 'id') return { id }
+
+  const columns = toSelectColumns(fields, ypFieldColumnMap)
+  return query(`SELECT ${columns} FROM nodes AS n JOIN node_yellowpages AS yp ON n.id = yp.nid WHERE n.id = ? AND status = 1`, [id])
+    .then(results => (results.length > 0 ? results[0] : null))
+}
+
+const topicFieldColumnMap = {
+  userId: 'uid',
+  tagId: 'tid',
+  title: 'title',
+  createTime: 'create_time',
+  status: 'status',
+}
 const createForumTopic = (userId, tagId, title) => {
   const timestamp = Math.floor(Date.now() / 1000)
-  return query('INSERT INTO nodes (uid, tid, title, create_time, status) VALUES (?, ?, ?, ?, 1)',
-                [userId, tagId, title, timestamp])
+  const { columns, values } = toInsertColumnValues({
+    userId,
+    tagId,
+    title,
+    createTime: timestamp,
+    status: 1,
+  }, topicFieldColumnMap)
+  return query(`INSERT INTO nodes ${columns}`, values)
     .then(results => ({
       id: results.insertId,
       title,
@@ -133,56 +165,71 @@ const createForumTopic = (userId, tagId, title) => {
 }
 const createYellowPage = (userId, tagId, name, address, phone, email, website) => {
   const timestamp = Math.floor(Date.now() / 1000)
-  return query('INSERT INTO nodes (uid, tid, title, create_time, status) VALUES (?, ?, ?, ?, 1)',
-                [userId, tagId, name, timestamp])
+  let { columns, values } = toInsertColumnValues({
+    userId,
+    tagId,
+    title: name,
+    createTime: timestamp,
+    status: 1,
+  }, topicFieldColumnMap)
+  return query(`INSERT INTO nodes ${columns}`, values)
     .then(results => results.insertId)
-    .then(topicId =>
-      query('INSERT INTO node_yellowpages (nid, address, phone, email, website) VALUES (?, ?, ?, ?, ?)',
-            [topicId, address, phone, email, website])
-      .then(() => ({
-        id: topicId,
-        name,
+    .then((topicId) => {
+      let { columns, values } = toInsertColumnValues({
+        topicId,
         address,
         phone,
         email,
         website,
-      })))
+      }, ypFieldColumnMap)
+
+      return query(`INSERT INTO node_yellowpages ${columns}`, values)
+        .then(() => ({
+          id: topicId,
+          name,
+          address,
+          phone,
+          email,
+          website,
+        }))
+    })
 }
 
 const updateForumTopic = (userId, topicId, tagId, title) => {
+  // check user ownership
   const timestamp = Math.floor(Date.now() / 1000)
-  const keys = []
-  const values = []
-  if (tagId !== undefined) {
-    keys.push('tid = ?')
-    values.push(tagId)
-  }
-  if (title !== undefined) {
-    keys.push('title = ?')
-    values.push(title)
-  }
-  if (keys.length > 0) {
-    values.push(topicId)
-    return query(`UPDATE nodes SET ${keys.join(',')} WHERE id = ?}`, values)
-    .then(() => ({
-      id: topicId,
-      title,
-    }))
-  }
-  return null
+  const { columns, values } = toUpdateColumnValues({
+    tagId,
+    title,
+  }, topicFieldColumnMap)
+
+  values.push(topicId)
+  return query(`UPDATE nodes SET ${columns} WHERE id = ?`, values)
+  .then(() => ({
+    id: topicId,
+    title,
+  }))
 }
 const updateYellowPage = (userId, topicId, tagId, name, address, phone, email, website) => {
-  const keys = []
-  const values = []
-  if (tagId !== undefined) {
-    keys.push('tid = ?')
-    values.push(tagId)
-  }
-  if (keys.length > 0) {
+  // check user ownership
+  const timestamp = Math.floor(Date.now() / 1000)
+  let { columns, values } = toUpdateColumnValues({
+    tagId,
+    title: name,
+  }, topicFieldColumnMap)
+
+  values.push(topicId)
+  return query(`UPDATE nodes SET ${columns} WHERE id = ?`, values)
+  .then(() => {
+    let { columns, values } = toUpdateColumnValues({
+      address,
+      phone,
+      email,
+      website,
+    }, ypFieldColumnMap)
+
     values.push(topicId)
-    return query(`UPDATE nodes SET ${keys.join(',')} WHERE id = ?}`, values)
-    .then(() =>
-      query(`UPDATE node_yellowpages SET ${keys.join(',')} WHERE id = ?}`, values)
+    return query(`UPDATE node_yellowpages SET ${columns} WHERE nid = ?`, values)
       .then(() => ({
         id: topicId,
         name,
@@ -190,9 +237,8 @@ const updateYellowPage = (userId, topicId, tagId, name, address, phone, email, w
         phone,
         email,
         website,
-      })))
-  }
-  return null
+      }))
+  })
 }
 
 const deleteTopic = (userId, topicId) =>
