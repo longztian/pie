@@ -1,5 +1,6 @@
 import query from './db/query'
 import image from './image'
+import { toInsertColumnValues } from './db/toColumnValue'
 
 /*
 class Message {
@@ -13,23 +14,37 @@ class Message {
 }
 */
 
-const createPrivateMessage = (userId, topicId, toUserId, body) => {
-  const timestamp = Math.floor(Date.now() / 1000)
+const pmFieldColumMap = {
+  topicId: 'msg_id',
+  userId: 'from_uid',
+  toUserId: 'to_uid',
+  body: 'body',
+  createTime: 'time',
+}
 
-  let action
-  if (topicId > 0) {
-    action = query('INSERT INTO priv_msgs (msg_id, from_uid, to_uid, body, time) VALUES (?, ?, ?, ?, ?)',
-                    [topicId, userId, toUserId, body, timestamp])
-  } else {
-    action = query('INSERT INTO priv_msgs (from_uid, to_uid, body, time) VALUES (?, ?, ?, ?)',
-                    [userId, toUserId, body, timestamp])
-                .then(results => query('UPDATE priv_msgs SET msg_id = id WHERE id = ?', [results.insertId])
-                                .then(() => results))
+const createPrivateMessage = (userId, topicId, toUserId, body) => {
+  const createTime = Math.floor(Date.now() / 1000)
+  const data = {
+    userId,
+    toUserId,
+    body,
+    createTime,
+  }
+  if (topicId) data.topicId = topicId
+
+  const { columns, values } = toInsertColumnValues(data, pmFieldColumMap)
+
+  let action = query(`INSERT INTO priv_msgs ${columns}`, values)
+
+  if (!topicId) {
+    action = action.then(results =>
+      query('UPDATE priv_msgs SET msg_id = id WHERE id = ?', [results.insertId])
+      .then(() => results))
   }
 
   return action.then(results => ({
     id: results.insertId,
-    createTime: timestamp,
+    createTime,
   }))
 }
 
@@ -37,23 +52,35 @@ const deletePrivateMessage = (userId, messageId) =>
   query('CALL delete_pm(?, ?)', [messageId, userId])
   .then(() => true)
 
+const fieldColumMap = {
+  topicId: 'nid',
+  userId: 'uid',
+  body: 'body',
+  createTime: 'create_time',
+}
+
 const createMessage = (userId, topicId, body, images) => {
-  const timestamp = Math.floor(Date.now() / 1000)
-  return query('INSERT INTO comments (uid, nid, body, create_time) VALUES (?, ?, ?, ?)',
-                [userId, topicId, body, timestamp])
-    .then((results) => {
-      const messageId = results.insertId
-      return Promise.resolve(images.map(img => image.add(messageId, img.name, img.path)))
-        .then(imgs => ({
-          id: messageId,
-          body,
-          author: {
-            id: userId,
-          },
-          images: imgs,
-          createTime: timestamp,
-        }))
-    })
+  const createTime = Math.floor(Date.now() / 1000)
+  const { columns, values } = toInsertColumnValues({
+    userId,
+    topicId,
+    body,
+    createTime,
+  }, fieldColumMap)
+
+  return query(`INSERT INTO comments ${columns}`, values).then((results) => {
+    const messageId = results.insertId
+    return Promise.resolve(images ? images.map(img => image.add(messageId, img.name, img.path)) : [])
+      .then(imgs => ({
+        id: messageId,
+        body,
+        author: {
+          id: userId,
+        },
+        images: imgs,
+        createTime,
+      }))
+  })
 }
 
 const updateMessage = (userId, messageId, body, images) =>

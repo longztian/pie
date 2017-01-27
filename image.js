@@ -9,7 +9,6 @@ const fieldColumnMap = {
   path: 'path',
   width: 'width',
   height: 'height',
-
 }
 
 const add = (messageId, name, path) => {
