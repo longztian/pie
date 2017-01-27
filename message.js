@@ -1,4 +1,5 @@
 import query from './db/query'
+import image from './image'
 
 /*
 class Message {
@@ -42,51 +43,43 @@ const createMessage = (userId, topicId, body, images) => {
                 [userId, topicId, body, timestamp])
     .then((results) => {
       const messageId = results.insertId
-      let action
-      if (images && images.length > 0) {
-        // get file info: height, width
-        // move from tmp to final location
-        // insert into database
-        action = query(`UPDATE images SET tid = ?, cid = ? WHERE id IN (${images.join(',')})`, [topicId, messageId])
-
-      } else {
-        action = Promise.resolve()
-      }
-
-      return action.then(() => ({
-        id: messageId,
-        body,
-        author: {
-          id: userId,
-        },
-        createTime: timestamp,
-      }))
+      return Promise.resolve(images.map(img => image.add(messageId, img.name, img.path)))
+        .then(imgs => ({
+          id: messageId,
+          body,
+          author: {
+            id: userId,
+          },
+          images: imgs,
+          createTime: timestamp,
+        }))
     })
 }
 
-const updateMessage = (userId, messageId, body, images) => {
+const updateMessage = (userId, messageId, body, images) =>
   // check user ownership
-  let action
-  if (body) {
-    action = query('UPDATE commnets SET body = ? WHERE id = ?', [body, messageId])
-  } else {
-    action = Promise.resolve()
-  }
-
-  if (images && images.length > 0) {
-    // has image updates
-    // {id: undefined, name, path} get new image info and insert new images
-    // {id: Int!, name} update name for existing images
-    // {id: Int!} delete this images
-  }
-}
+   Promise.resolve(body ? query('UPDATE commnets SET body = ? WHERE id = ?', [body, messageId])
+                               : null)
+    .then(() => images.map((img) => {
+      // image updates
+      // {id: undefined, name, path} get new image info and insert new images
+      // {id: Int!, name} update name for existing images
+      // {id: Int!} delete this images
+      if (img.id) {
+        if (img.name) return image.update(img.id, img.name)
+        return image.delete(img.id)
+      }
+      return image.add(messageId, img.name, img.path)
+    }))
 
 const deleteMessage = (userId, messageId) =>
   query('SELECT uid FROM comments WHERE id = ?', [messageId])
     .then((results) => {
       if (results.length === 0) return true
       if (results[0].uid !== userId) throw new Error('Not permitted')
-      return query('DELETE FROM comments WHERE id = ?', [messageId]).then(() => true)
+      return query('DELETE FROM comments WHERE id = ?', [messageId])
+        .then(() => image.deleteMessageImages(messageId))
+        .then(() => true)
     })
 
 const toMessage = row => ({
