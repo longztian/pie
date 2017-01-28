@@ -112,6 +112,14 @@ input UserInput {
   info: String
 }
 
+input YellowPageInput {
+  name: String,
+  address: String,
+  phone: String,
+  email: String,
+  website: String
+}
+
 input ImageInput {
   id: Int
   name: String
@@ -127,9 +135,9 @@ type Mutation {
   deleteUser(id: Int!): Boolean
 
   createForumTopic(tagId: Int!, title: String!): ForumTopic
-  createYellowPage(tagId: Int!, name: String!, address: String, phone: String, email: String, website: String): YellowPageTopic
+  createYellowPage(tagId: Int!, data: YellowPageInput!): YellowPageTopic
   updateForumTopic(id: Int!, tagId: Int, title: String): ForumTopic
-  updateYellowPage(id: Int!, tagId: Int, name: String, address: String, phone: String, email: String, website: String): YellowPageTopic
+  updateYellowPage(id: Int!, tagId: Int, data: YellowPageInput): YellowPageTopic
   deleteTopic(id: Int!): Boolean
 
   createMessage(topicId: Int!, body: String!, images: [ImageInput!]): Message

@@ -91,14 +91,14 @@ export default {
     createForumTopic: (obj, { tagId, title }, ctx) => (auth.isAuthenticated(ctx)
       ? topic.createForumTopic(auth.getUser(ctx).id, tagId, title)
       : null),
-    createYellowPage: (obj, { tagId, name, address, phone, email, website }, ctx) => (auth.isAuthenticated(ctx)
-      ? topic.createYellowPage(auth.getUser(ctx).id, tagId, name, address, phone, email, website)
+    createYellowPage: (obj, { tagId, data }, ctx) => (auth.isAuthenticated(ctx)
+      ? topic.createYellowPage(auth.getUser(ctx).id, tagId, data)
       : null),
     updateForumTopic: (obj, { id, tagId, title }, ctx) => (auth.isAuthenticated(ctx)
       ? topic.updateForumTopic(auth.getUser(ctx).id, id, tagId, title)
       : null),
-    updateYellowPage: (obj, { id, tagId, name, address, phone, email, website }, ctx) => (auth.isAuthenticated(ctx)
-      ? topic.updateYellowPage(auth.getUser(ctx).id, id, tagId, name, address, phone, email, website)
+    updateYellowPage: (obj, { id, tagId, data }, ctx) => (auth.isAuthenticated(ctx)
+      ? topic.updateYellowPage(auth.getUser(ctx).id, id, tagId, data)
       : null),
     deleteTopic: (obj, { id }, ctx) => (auth.isAuthenticated(ctx)
       ? topic.deleteTopic(auth.getUser(ctx).id, id)

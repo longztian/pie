@@ -13,6 +13,7 @@ class Message {
   status,
 }
 */
+const timestamp = () => Math.floor(Date.now() / 1000)
 
 const pmFieldColumMap = {
   topicId: 'msg_id',
@@ -23,7 +24,7 @@ const pmFieldColumMap = {
 }
 
 const createPrivateMessage = (userId, topicId, toUserId, body) => {
-  const createTime = Math.floor(Date.now() / 1000)
+  const createTime = timestamp()
   const data = {
     userId,
     toUserId,
@@ -60,7 +61,7 @@ const fieldColumMap = {
 }
 
 const createMessage = (userId, topicId, body, images) => {
-  const createTime = Math.floor(Date.now() / 1000)
+  const createTime = timestamp()
   const { columns, values } = toInsertColumnValues({
     userId,
     topicId,
@@ -70,7 +71,7 @@ const createMessage = (userId, topicId, body, images) => {
 
   return query(`INSERT INTO comments ${columns}`, values).then((results) => {
     const messageId = results.insertId
-    return Promise.resolve(images ? images.map(img => image.add(messageId, img.name, img.path)) : [])
+    return Promise.resolve(images ? images.map(i => image.add(messageId, i.name, i.path)) : [])
       .then(imgs => ({
         id: messageId,
         body,
@@ -83,12 +84,16 @@ const createMessage = (userId, topicId, body, images) => {
   })
 }
 
+const getAuthorUid = messageId =>
+  query('SELECT uid FROM comments WHERE id = ?', [messageId])
+  .then(results => (results.length > 0 ? results[0].uid : null))
+
 const updateMessage = (userId, messageId, body, images) =>
-  // check user ownership
-   Promise.resolve(body ? query('UPDATE commnets SET body = ? WHERE id = ?', [body, messageId])
-                               : null)
-    .then(() => images.map((img) => {
-      // image updates
+  getAuthorUid(messageId).then((authorUid) => {
+    if (!authorUid) throw new Error('Message not found')
+    if (authorUid !== userId) throw new Error('Operation not permitted')
+
+    const actions = images.map((img) => {
       // {id: undefined, name, path} get new image info and insert new images
       // {id: Int!, name} update name for existing images
       // {id: Int!} delete this images
@@ -97,17 +102,23 @@ const updateMessage = (userId, messageId, body, images) =>
         return image.delete(img.id)
       }
       return image.add(messageId, img.name, img.path)
-    }))
+    })
+
+    if (body) actions.push(query('UPDATE comments SET body = ? WHERE id = ?', [body, messageId]))
+
+    return Promise.all(actions).then(() => true)
+  })
 
 const deleteMessage = (userId, messageId) =>
-  query('SELECT uid FROM comments WHERE id = ?', [messageId])
-    .then((results) => {
-      if (results.length === 0) return true
-      if (results[0].uid !== userId) throw new Error('Not permitted')
-      return query('DELETE FROM comments WHERE id = ?', [messageId])
-        .then(() => image.deleteMessageImages(messageId))
-        .then(() => true)
-    })
+  getAuthorUid(messageId).then((authorUid) => {
+    if (!authorUid) throw new Error('Message not found')
+    if (authorUid !== userId) throw new Error('Operation not permitted')
+
+    return Promise.all([
+      query('DELETE FROM comments WHERE id = ?', [messageId]),
+      image.deleteMessageImages(messageId),
+    ]).then(() => true)
+  })
 
 const toMessage = row => ({
   id: row.id,
