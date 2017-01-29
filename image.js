@@ -11,17 +11,20 @@ const fieldColumnMap = {
   height: 'height',
 }
 
-const add = (messageId, name, path) => {
-  // path: /data/_width_height_<timestamp><i>.<type>
+const add = (messageId, name, tmpPath) => {
+  // tmpPath: /data/<timestamp><i>.<type>_width_height
+  const tmp = tmpPath.split('_')
+  if (tmp.length < 3) return Promise.reject('Invalid image path')
 
-  // get width and height from path
-  const tmp = path.split('_')
-  const newPath = tmp[0] + tmp[3]
-  const width = parseInt(tmp[1], 10)
-  const height = parseInt(tmp[2], 10)
+  const path = tmp.slice(0, -2).join('_')
+  const width = parseInt(tmp[tmp.length - 2], 10)
+  const height = parseInt(tmp[tmp.length - 1], 10)
+  if (isNaN(width) || isNaN(height) || width < 60 || height < 60) {
+    return Promise.reject('Invalid image size')
+  }
 
   return new Promise((resolve, reject) => {
-    rename(`${config.dir}${path}`, `${config.dir}${newPath}`, (error) => {
+    rename(`${config.dir}${tmpPath}`, `${config.dir}${path}`, (error) => {
       if (error) {
         reject(error)
       } else {
@@ -30,19 +33,17 @@ const add = (messageId, name, path) => {
           name,
           width,
           height,
-          path: newPath,
+          path,
         }, fieldColumnMap)
 
         query(`INSERT INTO images ${columns}`, values)
-        .then((results) => {
-          resolve({
-            id: results.insertId,
-            name,
-            width,
-            height,
-            path: newPath,
-          })
-        })
+        .then(results => resolve({
+          id: results.insertId,
+          name,
+          width,
+          height,
+          path,
+        }))
       }
     })
   })
@@ -54,7 +55,7 @@ const deleteImage = id => query('SELECT path FROM images WHERE id = ?', [id])
   .then(results => new Promise((resolve, reject) => {
     if (results.length > 0) {
       const path = results[0].path
-      rename(`${config.dir}${path}`, `${config.dir}${path}.deleted`, (error) => {
+      rename(`${config.dir}${path}`, `${config.dir}${path}_deleted`, (error) => {
         query('DELETE FROM images WHERE id = ?', [id]).then(() => {
           if (error) reject(error)
           else resolve()

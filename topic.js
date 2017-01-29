@@ -18,6 +18,7 @@ class Topic {
   }
 }
 */
+const timestamp = () => Math.floor(Date.now() / 1000)
 
 const getRecentCreatedForumTopics = limit => tag.getForumTags()
   .then(ids => ids.join(','))
@@ -37,8 +38,7 @@ const getRecentCreatedYellowPages = limit => tag.getYellowPageTags()
     info: topic.exp_time,
   })))
 
-const getRecentCreatedActivities = limit => query('CALL get_recent_activities(?, ?)',
-  [0, limit])
+const getRecentCreatedActivities = limit => query('CALL get_recent_activities(?, ?)', [0, limit])
   .then(results => results[0].map(topic => ({
     id: topic.nid,
     title: topic.title,
@@ -104,6 +104,7 @@ const getForumTopics = (tagId, limit, offset) => tag.getForumTags()
     }
     return null
   })
+
 const getForumTopic = id => query('SELECT id, title FROM nodes WHERE id = ? AND status = 1', [id])
   .then(results => (results.length > 0 ? results[0] : null))
 
@@ -158,12 +159,12 @@ const topicFieldColumnMap = {
 }
 
 const createForumTopic = (userId, tagId, title) => {
-  const timestamp = Math.floor(Date.now() / 1000)
+  const createTime = timestamp()
   const { columns, values } = toInsertColumnValues({
     userId,
     tagId,
     title,
-    createTime: timestamp,
+    createTime,
     status: 1,
   }, topicFieldColumnMap)
   if (columns.length === 0) throw new Error('No database columns found')
@@ -176,12 +177,12 @@ const createForumTopic = (userId, tagId, title) => {
 }
 
 const createYellowPage = (userId, tagId, data) => {
-  const timestamp = Math.floor(Date.now() / 1000)
+  const createTime = timestamp()
   let cv = toInsertColumnValues({
     userId,
     tagId,
     title: data.name,
-    createTime: timestamp,
+    createTime,
     status: 1,
   }, topicFieldColumnMap)
   if (cv.columns.length === 0) throw new Error('No database columns found')

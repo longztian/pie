@@ -6,6 +6,7 @@ import Router from 'koa-router'
 import bodyParser from 'koa-bodyparser'
 import { graphqlKoa, graphiqlKoa } from 'graphql-server-koa'
 import schema from './schema'
+import formidable from './formidable'
 
 const ONE_MONTH = 30 * 24 * 3600000
 const PORT = 3000
@@ -28,6 +29,7 @@ app.use(session({
 }))
 
 app.use(bodyParser())
+app.use(formidable())
 
 router.post('/graphql', graphqlKoa(ctx => ({
   schema,

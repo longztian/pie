@@ -36,7 +36,6 @@ const createPrivateMessage = (userId, topicId, toUserId, body) => {
   const { columns, values } = toInsertColumnValues(data, pmFieldColumMap)
 
   let action = query(`INSERT INTO priv_msgs ${columns}`, values)
-
   if (!topicId) {
     action = action.then(results =>
       query('UPDATE priv_msgs SET msg_id = id WHERE id = ?', [results.insertId])
