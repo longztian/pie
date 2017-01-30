@@ -29,7 +29,8 @@ app.use(session({
 }))
 
 app.use(bodyParser())
-app.use(formidable())
+
+router.post('/upload', formidable())
 
 router.post('/graphql', graphqlKoa(ctx => ({
   schema,
